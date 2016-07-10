@@ -1,34 +1,73 @@
 \chapter{Problem Description}
 
-Tribler is the result of 10 ongoing years of research in the area of peer-to-peer systems. With the first commit dating back to september 20, 2006 and 31 search results showing up in the TU Delft Institutional Repository browser, the code base of Tribler has evolved tremendously. 44 contributors have worked so far on Tribler, creating over 11.000 commits. Managing a software project on such a large scale requires adequate tools, a proper testing infrastructure, clear documentation, a logical project structure and a clear code style, where every team member adheres to.\\\\
-Instead of an easy to understand code base with a single style and consistent, logical naming, Tribler is more like a collection of glued together thesis projects. In this Chapter, the problems with the current source code, infrastructure and project structure will be addressed and explained.
+The goal of this thesis project is to help Tribler mature from an experimental research prototype into production-level code with potentially reliable usage by millions of users.\\\\
+After careful analysis it was decided that within the context of a nine month project the strongest contribution to the future of Tribler would be a step forward in quality assurance. At this point we believe the project does not need a particular focus on feature improvements, novel additional features, or boosting performance. After over ten years of software development by 44 unique contributors the investment in quality assurance has been neglected.\\\\
+Tribler suffers from a lack of unit tests, includes race conditions, lacks documentation, non-functional regression test framework, and has significant technical debt. The small amounts of tests that are available, are highly unstable, leading to wasted development time.\\\\
+This thesis is focussed on a round of invasive maintenance and cleaning of the code and all other infrastructure such as installers and testing environment. Our work aims to ensure that it is possible to conduct another decade of experimental distributed systems research with the Tribler code base. The alternative is continued usage and expansion of the code, which are likely to lead to a forced clean slate approach.\\\\
+The structural problem is the lack of maintenance capacity. Each contributor to the Tribler research in the form of a bachelor, master, or PhD student needs to be primarily focussed on their thesis work. A thesis requires concrete experimental results, contribution to theory, or both. We believe the lack of student enthusiasm for fixing bugs and writing documentation is the root cause of current state of the code base.\\\
+In this remaining of this chapter, various problems within the Tribler project will be highlighted. These issues can roughly be divided in two categories: issues related to the neglect of quality assurance and issues related to the code base itself.
 
-\section{Testing Infrastructure}
-To test the code base, a Jenkins server for Continuous Integration (CI) is used. When a Pull Request (PR) in the Tribler repository on GitHub is opened, the tests are executed on a Linux server. In this Section, various problems with the testing infrastructure will be elaborated.
 
-\subsection{System and Deployment Testing}
-When starting this thesis, the available test suite more resembles system and integration tests. Only a small fraction of the tests are actual unit tests. Most of the tests are starting up a complete Tribler session while often, only a very small subset of the features of Tribler will be tested in a particular run. For instance, in most tests, Dispersy is started while in some situations, no Dispersy-related code is tested. Each of these enabled features might lead to unwanted side-effects and failures during the test execution.\\\\
-Each unit test must be very small and should only focus on the code that actually is being tested. Mocking techniques should be used as much as possible to have more control of the testing environment.\\\\
-Deployment testing should be in place to test whether Tribler actually runs correctly on all supported platforms (Windows, OS X and Linux), using the real Tribler network. Some basic operations might be executed such as remote searching, downloading torrents and streaming a video. Screenshots can be taken to (manually) verify the correctness of the Graphical User Interface (GUI).
+\section{Quality Assurance}
+The ongoing lack of any quality assurance measure has led to several concerns. In this Section, some of the problems regarding quality assurance will be addressed.
 
-\subsection{Stability of the Tests}
-The test suite is very unstable and failing randomly across various runs. The code base of Tribler is infected with race conditions that are happening a fraction of the time, due to sloppy multi-threaded programming. Another factor that effects the stability of the tests is the dependency on other peers in the network. Instead of isolated tests in a controlled environment, the Tribler sessions that are started during the tests, are actually connecting to other users in the network, resulting in uncertain situations.\\\\
-The unit tests should not be dependent on the outside network. Tests that rely on network-dependent code should be tested with mocked objects where right (artificial) data is returned, possibly after some small delay.
+\subsection{Test Suite}
+Tribler has a structural lack of proper designed unit tests. Currently, there are 99 tests and 48.970 lines of code in the Tribler module (excluding code in the Dispersy framework). Many of these tests are taking over half a minute to complete and are bootstrapping an extensive Tribler session. Only a small fraction of the test suite has the characteristics of unit tests. Having tests that are doing a broad range of operations, inevitably leads to undesired side-effect and failing tests. No single attempt has been made to mock components of the system to simplify tests and focus on the part of the system that has to be verified.\\\\
+To illustrate this problematic situation in more detail, the tunnel community is taken as example. The tunnel community allows users of Tribler to anonymously download content and is one of the most anticipated features of the software. The current test suite contains no single unit test that is focussed on this part of the code. Instead, there are several unstable integration-like tests that are starting up a graphical user interface and perform an anonymous download. While one might argue that having such a test might be sufficient for regression testing purposes, this test does not fully cover the source code and any code related to error handling is completely uncovered.\\\\
+There is one more factor that contributes to the instability of the current test suite. A significant part of the test suite is depending on external network resources, ranging from trackers and seeders for a specific torrent to other peers in the decentralized Dispersy network. This fragile architecture gives rise to failing tests due to unavailable nodes, unexpected responses from external peers and other unpredicted circumstances.\\\\
+In general, well designed tests exclude any dependency on external resource that is outside the control of the developer. This can be achieved by mocking method calls to return dummy data. Additionally, one can make sure that the external resource is available in the local testing environment. For instance, when a test is dependent on a specific torrent seeder, a local libtorrent session can be started that seeds this torrent.
 
-\subsection{Execution Time}
-The total execution time of these tests is around seven minutes. This can be explained by the fact that often a Tribler session is booted up for each test. Starting and stopping Tribler takes a significant amount of time and resources and for some tests, it it not even necessary to start up the whole Tribler session. Together with the fact that some tests are randomly failing, it can take several tries to get all tests passing, resulting in wasted time and unnecessary waiting for developers. Moreover, some tests are very fragile and tend to timeout, leading to a failure after around twenty minutes.\\\\
-There are two important factors for solving this problem. First, the tests should be very stable, failing only when a developer has written code that makes one or more tests failing. Second, mocking must be used to have more control over the data flow. By mocking the Tribler session, it might not be necessary anymore to start up the whole interface.
+\subsection{Testing Environment}
+Tribler uses a Jenkins environment to automate the testing of new Pull Requests (PRs). These tests are only executed on a Linux server. Tribler itself, however, is also packaged and distributed for Windows and OS X. According to the GitHub download statistics, the Windows and OS X distributions account for 91\% of the downloads\footnote{https://api.github.com/repos/tribler/tribler/releases/latest}. Not running any test on this platform is a missed opportunity to identify platform-specific errors. Moreover, any conditional in the source code that is only executed on a specific platform, remains completely uncovered and untested.
 
-\subsection{Code Coverage}
-The code coverage of Tribler 6.5 Release Candidate 7 is around 65\% of the lines of source code. As can be seen in Figure X, no effort has been made to increase the code coverage over time.\\\\
-The code coverage of conditional statements is around 45\%. This lower percentage is due to the fact that the tests are only executed on a Linux environment. Tribler contains many platform-conditional statements which are currently not covered. To solve this problem, the tests should also be executed on Windows and OS X in parallel.\\\\
-Another issue is that many exceptions remain uncovered during the tests. By making small unit tests and by the usage of mocking, these exceptions can be covered, thus increasing the code coverage.
+\subsection{Documentation}
+The responsibility to maintain a proper and up-to-date documentation base for current and new developers has been completely neglected during the lifespan of the Tribler project. Except for some general information about the project, there is a minimal amount of information available about the system. Since the process of familiarization with the source code is very hard, Tribler has become an unattractive open-source project to contribute to.
 
-\section{Separation of the GUI and the Core}
-The GUI is interleaved in the core of Tribler. This means that the GUI does not exist without the Tribler core and vice versa. The disadvantage of this approach is the lack of portability of the core. With a clear separation of the GUI and core function, developers can create their own GUIs and power them using \emph{libtribler} (the core of Tribler without the GUI). \emph{libtribler} could also be used stand-alone, in the form of a command line application. This approach is very similar to the separation of the GUI and kernel in Linux.\\\\
-To make it easy for developers to work with \emph{libtribler}, an API should be written, for instance, using JSON-RPC. The endpoints of this API should contain the most commonly used operations within Tribler such as searching for torrents, managing downloads and changing settings.
+\subsection{Outdated Dependencies}
+The Tribler code base has many dependencies on other libraries. At the time of writing, Tribler depends on at least 20 other python libraries. Apart from that, we need libraries for testing and packaging the code. Keeping these libraries up to date, is a necessary and important process.\\\\
+Outdated libraries might lead to compatibility issues and workarounds. For packaging Tribler on Windows, we are using \emph{py2exe}, a library that is not maintained since 2008. Usage of \emph{py2exe} might be dropped in favor of more maintained and mature libraries, for instance, \emph{PyInstaller}.
 
-\section{Documentation}
-The project in its current state contains very little and poor documentation. Most of the documentation is available is outdated or not relevant anymore. A solid documentation base is important for volunteers and new team members wanting to start working on Tribler. Guides to get new developers up and running should be written to make Tribler a more attractive platform to work on.
 
-% TODO: startup experience?
+\section{Code quality}
+In the previous Section, the lack of quality assurance and the consequences of this has been elaborated. In this Section, the focus will shift to the code itself. Identified issues in the current structure of the source code will be discussed.
+
+\subsection{Graphical User Interface}
+The current Graphical User Interface (GUI) of Tribler is written with the wxPython library. The GUI accounts for just over 20.000 source lines of code (SLOC), making up 33\% of the Tribler code base which is significant.\\\\
+The code base of the GUI is has been subject to various refactoring cycles. This leads to a very complex and hard to understand package of code. Technical debt is clearly visible in this part of the code base. Moreover, the interface is plagued with many useless and hidden features that are contributing to the complexity of the code. A clean slate approach with a more mature and user-friendly libraries seems to be the solution that could benefit Tribler the most.\\\\
+The current decade of software engineering provides many alternative tools and libraries that allows to build a visually appealing, platform-independent interface with a minimal amount of code. For instance, the popular and mature Qt framework allows developers to specify their layout in a visual designer.
+
+\subsection{High Coupling between modules}
+The user interface and core of Tribler are interleaved to such an extent that it is inconvenient for developers to test out specific features without making changes to the GUI. Providing a minimal Tribler service that only runs the core code and removing the dependencies between the core and user interface will boost the productivity of developers. An interface can be provided to provide necessary  interactions with the core. There are some more occurrences of dependencies between modules which should be removed. For instance, a full Tribler session object is passed to the constructor of the main database class while a path to the destination location of the database file suffices.\\\\
+By separating modules from each other, the ease of maintainability can be improved since developers do not need to worry about errors that are propagating to other module dependencies. Separation also leads to a code base that is easier to understand.
+
+\subsection{Inconsistent Code Style}
+After the contribution of 44 developers, numerous code styles across the code base can be identified. This leads to an inconsistent code base. There is absolutely no appliance to the PEP8 guidelines which is based on the fact that the current source code contains a sheer amount of 11644 violations.
+
+%Refactoring overview 5-pages
+
+%This chapter show a general overview of all the various large and small contributions made to boost the health of the code base. In total over 13000 lines of code have been altered. 33 pull requests accepted.
+%GUI screenshots, before, after
+%remove DB calls from GUI.
+%Github screenshots with altered lines of code.
+%progressive JSON API.
+
+%Quality Assurance infrastructure 8-pages
+
+%In the previous chapter a general overview is provided of the numerous changes to the code base. Now we focus on the specific changes for quality assurance in more detail. Key change is 
+%splitting of the code base into two parts to make them easier to maintain.  
+%-documentation, easier to contribute, improved learning curve, REST API.
+%software performance regresssion-graphs
+%evolution of code coverage
+
+%Experimental results 10-pages GRAPHS
+
+%We now focus on performance experiments of our new Tribler code base and demonstrate the key improvements.
+
+%Startup time graph, 10 runs + 10 runs new
+% + breakdown, checkpoints..
+%remote search
+%download speed
+%memory usage+stress test, while doing lots of REST API calls.
+%content discovery speed, Subscribe channels experiment: 1,5,10,15,25 joined channels and resource usage.
+
+%...
