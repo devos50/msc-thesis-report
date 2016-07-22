@@ -5,15 +5,15 @@
 
 The resources, budget and time frame of software engineering projects are often constrained.
 This requires software engineers to analyse trade-offs that have to be made in order to meet deadlines and budgets.
-Making decisions that are beneficial on the short term, might lead to significantly increased maintenance costs in the future.
+Making decisions that are beneficial on the short term, might lead to significantly increased maintenance costs in the long run.
 The phenomenon of favouring short-term development goals over longer term requirements is often referred to as \emph{technical debt}.
 While technical debt might not have implicit consequences on the user experience, it dramatically impacts quality and maintainability of the software.\\\\
-The term technical debt was first introduced by Ward Cunningham as writing "not quite right" code in order to ship a new product or feature to market faster.
+The term technical debt was first introduced by Ward Cunningham as writing "not quite right" code in order to ship a new product or feature to market faster\cite{cunningham1993wycash}.
 Since then, the term has gained progressively more attention in the software engineering research and the agile community.
 Effective management of such debt is considered critical to achieve and maintain a high level of software quality.
-In 2007, Steve McConnell created the technical debt taxonomy where he refined and expanded the definition.
+In 2007, Steve McConnell created the technical debt taxonomy where he refined and expanded the definition\cite{mcconnell2007debt}.
 He points out that some kind of engineering practices are not considered technical debt, such as deferred features, incomplete work that is not shipped and other features where one does not have to 'pay' debt for.
-Martin Fowler considers technical debt more as a metaphor to use when communicating with non-technical people and introduced the technical debt quadrant in 2009.
+Martin Fowler considers technical debt more as a metaphor to use when communicating with non-technical people and introduced the technical debt quadrant in 2009\cite{technicaldebtquadrant}.
 According to his work, technical debt can be categorized in distinct types, separating issues arising from recklessness from those decisions that are made strategically. 
 Figure \ref{fig:technical-debt-quadrant} presents this distinction in more detail.\\
 
@@ -24,20 +24,21 @@ Figure \ref{fig:technical-debt-quadrant} presents this distinction in more detai
 	\label{fig:technical-debt-quadrant}
 \end{figure}
 
-Technical debt can be both invisible and visible to end users.
+Technical debt can be both invisible and visible to end users\cite{kruchten2012technical}.
 Examples of invisible technical debt includes code smells, coding style violations, low internal quality and high code complexity.
 Visible technical debt is expressed in bugs that are affecting users but can also be identified by user-unfriendly, cluttered graphical user interfaces.
 Decisions to extend and evolve the graphical user interface with new visual elements, can lead to a high amount of technical debt and a poor user experience.\\\\
-The term itself is borrowed from the finance domain.
+The term itself is borrowed from the finance domain\cite{guo2011portfolio}.
 There is however one important distinction between financial debt and technical debt.
 When working with financial debt, the costs that the debtor has to pay is usually clear.
 This is not always the case with technical debt: there might be some situations where no technical debt incurred.
 For instance, if it is known for a part of the system to never be updated or maintained in the future, time can be saved by not updating the related documentation.
 Software engineers have to carefully consider what technical debt they wish to incur and when this debt will be paid off.\\\\
+There are several causes that contribute to the amount of accumulated technical debt during the software development process\cite{martini2014architecture}. While notable to a lesser extent in research-oriented software engineering, time pressure can cause developers to think reckless about their architecture. Uncertainty in  decision making during an early stage of development might lead to higher technical debt. Finally, in an agile environment, software requirements might change more often, causing the underlying architecture and code base to change. Not properly managing such changes can lead to significant technical debt.\\\\
 Tribler is the result of 10 ongoing years of scientific research in the field of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
 The software allows users to discover and download interesting content such as music and videos in a completely decentralized manner.
-In 2014, support for anonymous download using a Tor-like protocol has been added. 
-In 2015, the protocol has been extended to support for anonymous seeding of torrents.
+In 2014, support for anonymous download using a Tor-like protocol has been added by the work of R. Plak\cite{plak2014anonymous} and J.H. Tanaskoski\cite{tanaskoski2014anonymous}. 
+In 2015, the protocol has been extended to support for anonymous seeding of torrents\cite{ruigrok2015bittorrent}.
 The graphical user interface of Tribler is shown in figure \ref{fig:tribler-interface}.
 
 \begin{figure}[!h]
@@ -46,6 +47,8 @@ The graphical user interface of Tribler is shown in figure \ref{fig:tribler-inte
 	\caption{The graphical user interface of Tribler v6.5.2.}
 	\label{fig:tribler-interface}
 \end{figure}
+
+\newpage
 
 The focus of this thesis will be tracking and managing technical debt in Tribler. The following research question can be formulated:\\\\
 \emph{How can we track and manage technical debt within Tribler?}\\\\
