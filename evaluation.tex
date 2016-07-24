@@ -51,10 +51,43 @@ The other graphs shows the turnaround time of the request. On average, it takes 
 ...
 
 \section{Video streaming}
-...
+The embedded video player in Tribler allows users to watch a video that is being downloaded. Available since Tribler 4.0, the video playback did not evolve much. The video player is based on VLC and offers support for seeking so the user can jump randomly to a specified offset in the video. Video downloads have a special Video On Demand (VOD) mode which means that the libtorrent library piece picking mechanism uses a linear policy. In this mode, pieces are downloaded in a timely matter. When the user seeks to a position in the video, the prioritization of the pieces are modified, giving priority to pieces around the chosen seek position. Users also have the possibility to use an external video player that support playback of HTTP video streams.\\\\
+The bytes are streamed to a VLC client using HTTP. When Tribler starts, a HTTP video server is started. This server supports HTTP range requests which means that a specific part of a video file can be queried by using the HTTP \emph{range} header. This is useful when the user performs a seeking operation since only a specific part of the file has to be returned in the HTTP response. If some pieces are not available, the video server will wait until these bytes are downloaded and available before returning these bytes in the response.\\\\
+To improve user experience, we wish to minimize the delay that users experience when performing a seek operation in the video player. The experiment performed in this Section, will measure the buffering delay. For this purpose, the well-seeded \emph{Big Buck Bunny}\footnote{https://peach.blender.org} movie will be downloaded. We will perform various HTTP range requests using the \emph{curl} command line tool. Every request, 10 megabyte of data will be requested and we will measure the total request time for each of these requests. The results are visible Table \ref{table:video_player_seek_times}.\\
+
+\begin{table}[]
+	\centering
+	\label{table:video_player_seek_times}
+	\begin{tabular}{|l|l|}
+		\hline
+		First byte               & Request time (sec) \\ \hline
+		0                        & 11.6                  \\ \hline
+		$ 1 * 10^9 $ & 64.4                  \\ \hline
+		$ 2 * 10^9 $ & 64.6                  \\ \hline
+		$ 3 * 10^9 $ & 65.9                   \\ \hline
+		$ 4 * 10^9 $ & 100.6                   \\ \hline
+		$ 5 * 10^9 $ & 115.6                   \\ \hline
+		$ 6 * 10^9 $ & 115.8                  \\ \hline
+		$ 7 * 10^9 $ & 12.2                  \\ \hline
+		$ 8 * 10^9 $ & 66.6                   \\ \hline
+		$ 9 * 10^9 $ & 52.4                   \\ \hline
+	\end{tabular}
+	\caption{My caption}
+\end{table}
+
+Theoretically, we would expect around the same request time for each range request, assuming that the availability of each piece is high. When performing a seek, the piece picking mechanism adjusts priorities and these prioritized pieces should start to download immediately. The experiments shows some serious flaws in this mechanism where it might take up to two minutes for data to be available. Further investigation of this issue learns us that the video player always tries to download the first 10\% of the video file, except the 7th run of the experiment, where the prioritizing seems to be correctly applied. Solving this bug is considered further work and described in more detail on Github issue 1234\todo{issue maken}.
 
 \section{Content discovery}
-...
+Content discovery is one of the most important features of Tribler. By running Tribler idle for a while, content is synchronized with other peers using the Dispersy framework. When a user starts Tribler for the first time, there is no available content yet. In this Section, we will verify the content discovery speed after the first start. The experiment is structured as follows: we measure the interval from the completion of start procedure to the moment where the first content is discovered. This is done for both torrents and channels and repeated 15 times. The results of this experiment are visible in Figure \ref{fig:content_discovery_speed}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.6\columnwidth]{images/experiments/content_discovery_speed}
+	\caption{Test.}
+	\label{fig:content_discovery_speed}
+\end{figure}
+
+The delay of discovering the first channel is reasonably. In all runs, we have our first content available within 35 seconds. Discovery times of the first torrent is slightly slower and in all runs, the first torrent in a channel is discovered within 40 seconds. In the old user interface, users were presented with a blank screen with no feedback about new discovered content. In the new interface, the user is presented with a screen that informs the user that Tribler is discovering the first content. This screen is only shown the first time Tribler is started.
 
 \section{Channel subscription}
 When Tribler runs idle, not all content is discovered. The majority of content is discovered when users are subscribing to channel. When Tribler discovers a channel, users are presented with a preview of this channel. Internally, Tribler joins a \emph{PreviewChannelCommunity}, a community derived from the main \emph{ChannelCommunity}. I this preview, the amount of torrents to be collected is limited. The associated \emph{ChannelCommunity} is joined the moment the user subscribes to a channel, after which the full range of content is synchronized with the subscribed user. Removing the preview mechanism significantly increases the resource usage of the Tribler session since the amount of incoming messages to be decoded and verified will rise.\\\\
