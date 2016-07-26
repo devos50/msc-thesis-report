@@ -50,7 +50,24 @@ The development of Tribler continued with the release of Tribler 5.0 in 2009. Th
 Here something about Tribler 6.
 
 \section{Defining the future of Tribler}
-Propose new architecture and explain it.
+In the previous Section, the evolution of Tribler has been evolved, up to the current architecture. We now turn our attention to the future of Tribler and propose a new architecture that will enable Tribler for another 10 year of research. The proposed architecture is visible in Figure \ref{fig:tribler7}. This architecture follows a layered approach with a clear distinction between the visible layers. This Section will discuss the proposed design and highlight decisions that have been made during the development process.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.7\columnwidth]{images/architecture/tribler7}
+	\caption{The proposed architecture of Tribler 7.}
+	\label{fig:tribler7}
+\end{figure}
+
+\subsection{Trusted Peer Discovery}
+The trusted walker is located at the lowest layer of the architecture and is the central component for discovering other peers. At the moment, Dispersy is responsible for discovering other peers in the Tribler network. This mechanism will be replaced by a trusted walker that is used by the Multichain\todo{beter uitleggen}.
+
+\subsection{Libtorrent and Content Discovery}
+Above the walker primitives explained in the previous Section, we find two components that are already present in the current system. The popular \emph{libtorrent} library is used to facilitate downloads. Libtorrent is written in C++, however interfaces for other programming languages such as Python, Go and Java are available. Libtorrent uses an alert mechanism to notify the program that is using the library about events in the library, such as download state transitions, peer discovery or completion of a metainfo lookup. The current way of using \emph{libtorrent} in Tribler requires minimal changes in the proposed design, except for some minor refactoring and cleanup of the current code.\\\\
+The content discovery components allows users to discover and search for available torrents, channels and playlists in Tribler\todo{afmaken}.
+
+\subsection{libtribler}
+Test
 
 % http://delivery.acm.org/10.1145/2080000/2072433/p739-zeilemaker.pdf?ip=145.94.5.138&id=2072433&acc=ACTIVE%20SERVICE&key=0C390721DC3021FF%2E512956D6C5F075DE%2E4D4702B0C3E38B35%2E4D4702B0C3E38B35&CFID=816981133&CFTOKEN=23604061&__acm__=1469268778_0dc54a276c6ce7abce65547df9722e66
 
