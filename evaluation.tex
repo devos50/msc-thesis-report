@@ -8,6 +8,44 @@ The experiments with the Tribler core are performed on a virtual private server.
 If not stated otherwise, the default values of the Tribler configuration file are used. These default values can be found in the `defaults.py` file in the source code directory of Tribler\footnote{https://github.com/Tribler/tribler/blob/devel/Tribler/Core/defaults.py}. All communities, except for \emph{Multichain} and \emph{BarterCast}, are loaded.\\\\
 The exact steps of each experiment are specified using scenario files. In a scenario file, each line specifies a specific command of a peer at a specific time. The framework that runs these experiments, reads this file, interprets the commands to be executed and schedules them. Several constructs have been implemented to gather and write statistics to files in a processable and readable format. The usage of scenario files is already adopted in several Dispersy experiments, mainly in our \emph{AllChannel} experiment that runs on a supercomputer. We extended the usability of this approach to run a Tribler client and added various commands to support the experiments as described in this Section. The flexibility of these scenario files gives the next generation of Tribler developers a decent framework to use when doing performance analysis, scientific research and benchmarking\todo{tabel met commands?}.
 
+\section{Profiling Tribler on low-end devices}
+The addition of a REST API allows developers to have flexibility to run Tribler remotely, for instance, on embedded devices such as a Raspberry Pi. The running Tribler instance can be controlled from external devices by performing HTTP requests. Android is another example of a device that can run Tribler. During the last years, various research have been conducted to execute Tribler on Android devices\todo{cites}. Running Tribler on a low-end device, can yield much information about bottlenecks that might not be directly visible when running Tribler on a desktop or supercomputer.\\\\
+The experiments described in this Section are executed on a Raspberry Pi, third generation with 1GB LPDDR2 ram, 4× ARM Cortex-A53, 1.2GHz CPU and 16GB storage on a microSD card. The used operating system is raspbian, the official system specifically designed for the Raspberry Pi, based on Debian.\\\\
+Regular usage of Tribler on the Raspberry Pi using the REST API have us suspected that the Raspberry Pi is under heavy load. Monitoring the process for a while, reveals that the CPU usage is often around 100\%, completely filling up one CPU core. To get a detailed breakdown of execution time per method in the code base, the Yappi profiler has been used to analyse the performance of the Tribler session. This profiler has been integrated in the \emph{twistd} Tribler plugin and can be started together with Tribler by passing a flag when starting the plugin. The output of the profiler is a \emph{callgrind} file that can be loaded and analysed by third party software. The breakdown of a 20-minute run is visible in Figure x\todo{figure}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{images/experiments/yappi_breakdown}
+	\caption{Test.}
+	\label{fig:yappi_breakdown}
+\end{figure}
+
+The file created by Yappi gives a detailed overview of the execution time of methods and can be used as a tool to detect performance bottlenecks in the system. The column \emph{Incl.} gives the inclusive cost of the function, this means the execution time of function itself and all it's including functions. The column \emph{self} gives only the execution time of the function, without considering callees. The other columns are self-explanatory and can be used to track the respective function in the source code.\\\\
+From the breakdown, it is clear that Dispersy has a big impact on the performance of Tribler when running on the Raspberry Pi. The \emph{ecdsa\_verify} method is dominating the runtime of Tribler: the method is responsible for 45.81\% of the runtime. This specific method verifies the sign of an incoming Dispersy message and is invoked every time a signed message comes in. Disabling cryptographic verification of incoming messages should improve the situation, however, this is a trade-off between security and performance. By not verifying incoming messages, fake messages by an adversary can be forged and are accepted in such as system. To verify whether the responsiveness of the system improves, we measure the CPU usage of two runs. Both runs start with a non-existing Tribler state directory and have a duration of five minutes. In the first run, we are using the default configuration of Tribler, like in most of the other experiments in this Chapter. In the second run, we disable verification of incoming messages to see how things improve. The two runs are displayed in Figure \ref{fig:raspi_cpu_usage}.\\\\
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/experiments/raspi_cpu_usage}
+	\caption{Test.}
+	\label{fig:raspi_cpu_usage}
+\end{figure}
+
+In the Figure, some occurrences are visible where the CPU usage appears to be over 100\%. This is explained by the fact that some of the underlying code is designed to run on multiple processors. While the threading model of Tribler is limited to a single core, the runtime and interpreter might execute code on additional cores. In the run where we enable all components of the system, the CPU usage is often 100\%. When verification of Dispersy messages is disabled, we see somewhat more drops in CPU usage but the utilization jumps back immediately to higher amounts. Disabling message verification is clearly not enough to guarantee a usable and responsive system.\\\\
+To detect other performance bottlenecks, we sort the Yappi report on the \emph{Self} column to get insight in methods that are taking a long time to complete. This is visible in Figure \ref{fig:yappi_breakdown_self}. An interesting observation here is that the Python built-in \emph{all} method takes up a significant amount of time (6.13\% of the runtime). The \emph{all} method takes an iterable object and returns true if all objects of this collections are true. Both the \emph{all} method and \emph{zip} method (also visible in Figure \ref{fig:yappi_breakdown_self}) is used in the \emph{\_resume\_delayed} method. Optimization of this method is considered future work and described in GitHub issue 505\footnote{https://github.com/Tribler/dispersy/issues/505}.\\\\
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{images/experiments/yappi_breakdown_self}
+	\caption{Test.}
+	\label{fig:yappi_breakdown_self}
+\end{figure}
+
+This shows that the Yappi profiler can be a very convenient tool to detect and track performance bottlenecks. The integration in the twistd plugin makes it easy for developers to run and analyse Tribler sessions under different circumstances.
+
+\section{Performance of the REST API}
+\todo{experiment}
+% Use Apache JMeter.
+
 \section{Start-up experience}
 The very first interaction that users have with Tribler, is the process of starting. During the boot process, various operations are performed:
 \begin{itemize}
@@ -126,37 +164,3 @@ In the current user interface, the torrent file is fetched when the user single 
 We immediately notice that the failure rate of DHT lookups is quite high: a little under 50\% of the lookup operations are timing out. This might be addressed to dead torrents (no peers in the DHT have this torrent available) or private torrents (torrents which information is not spread in the DHT). The amount of failures might be even higher in a less popular channel since the content in these channels are less seeded. We should note that the DHT is not the only source of torrents in Tribler. When performing a remote query search, each incoming torrent result might have candidates attached that possibly have this torrent in their database. When clicking on a torrent result in the list of search results, not only the DHT is queried, each of the candidates of the torrent result is queried in parallel using the Trivial File Transfer Protocol (TFTP)\cite{sollins1992tftp}. TFTP is a simplified version of the more sophisticated File Transfer Protocol which is commonly used to transfer files between web servers. Tribler contains a dedicated Python package with a TFTP implementation. Unfortunately, the approach of fetching metainfo of torrents from other peers is only usable when searching for torrents. Caching and exchanging torrent candidates is not successful since the availability of candidates later cannot be guaranteed.\\\\
 The average lookup time of torrents that are successfully fetched from the DHT is 5.81 seconds which is reasonably fast. Additionally, Figure \ref{fig:metainfo_fetch} shows that a little over 90\% of the successfully fetched torrents are retrieved within 10 seconds.\\\\
 To improve performance of metainfo lookup, dead torrents should be handled correctly. One possible solution might be an implementation of a periodical check for each incoming torrent. By limiting the number of outstanding DHT requests, this approach does not create require much additional resources. To further improve performance, the result of DHT lookups might be disseminated to remote peers in the network. Torrents that are not successfully fetched from the DHT, could be hidden automatically in the user interface. The downside of this approach is that it might not give a realistic view of the availability of a torrent since their might be candidates which have a copy of this torrent available.
-
-\section{Profiling Tribler on low-end devices}
-The addition of a REST API allows developers to have flexibility to run Tribler remotely, for instance, on embedded devices such as a Raspberry Pi. The running Tribler instance can be controlled from external devices by performing HTTP requests. Android is another example of a device that can run Tribler. During the last years, various research have been conducted to execute Tribler on Android devices\todo{cites}. Running Tribler on a low-end device, can yield much information about bottlenecks that might not be directly visible when running Tribler on a desktop or supercomputer.\\\\
-The experiments described in this Section are executed on a Raspberry Pi, third generation with 1GB LPDDR2 ram, 4× ARM Cortex-A53, 1.2GHz CPU and 16GB storage on a microSD card. The used operating system is raspbian, the official system specifically designed for the Raspberry Pi, based on Debian.\\\\
-Regular usage of Tribler on the Raspberry Pi using the REST API have us suspected that the Raspberry Pi is under heavy load. Monitoring the process for a while, reveals that the CPU usage is often around 100\%, completely filling up one CPU core. To get a detailed breakdown of execution time per method in the code base, the Yappi profiler has been used to analyse the performance of the Tribler session. This profiler has been integrated in the \emph{twistd} Tribler plugin and can be started together with Tribler by passing a flag when starting the plugin. The output of the profiler is a \emph{callgrind} file that can be loaded and analysed by third party software. The breakdown of a 20-minute run is visible in Figure x\todo{figure}.
-
-\begin{figure}[!h]
-	\centering
-	\includegraphics[width=0.9\columnwidth]{images/experiments/yappi_breakdown}
-	\caption{Test.}
-	\label{fig:yappi_breakdown}
-\end{figure}
-
-The file created by Yappi gives a detailed overview of the execution time of methods and can be used as a tool to detect performance bottlenecks in the system. The column \emph{Incl.} gives the inclusive cost of the function, this means the execution time of function itself and all it's including functions. The column \emph{self} gives only the execution time of the function, without considering callees. The other columns are self-explanatory and can be used to track the respective function in the source code.\\\\
-From the breakdown, it is clear that Dispersy has a big impact on the performance of Tribler when running on the Raspberry Pi. The \emph{ecdsa\_verify} method is dominating the runtime of Tribler: the method is responsible for 45.81\% of the runtime. This specific method verifies the sign of an incoming Dispersy message and is invoked every time a signed message comes in. Disabling cryptographic verification of incoming messages should improve the situation, however, this is a trade-off between security and performance. By not verifying incoming messages, fake messages by an adversary can be forged and are accepted in such as system. To verify whether the responsiveness of the system improves, we measure the CPU usage of two runs. Both runs start with a non-existing Tribler state directory and have a duration of five minutes. In the first run, we are using the default configuration of Tribler, like in most of the other experiments in this Chapter. In the second run, we disable verification of incoming messages to see how things improve. The two runs are displayed in Figure \ref{fig:raspi_cpu_usage}.\\\\
-
-\begin{figure}[!h]
-	\centering
-	\includegraphics[width=1.0\columnwidth]{images/experiments/raspi_cpu_usage}
-	\caption{Test.}
-	\label{fig:raspi_cpu_usage}
-\end{figure}
-
-In the Figure, some occurrences are visible where the CPU usage appears to be over 100\%. This is explained by the fact that some of the underlying code is designed to run on multiple processors. While the threading model of Tribler is limited to a single core, the runtime and interpreter might execute code on additional cores. In the run where we enable all components of the system, the CPU usage is often 100\%. When verification of Dispersy messages is disabled, we see somewhat more drops in CPU usage but the utilization jumps back immediately to higher amounts. Disabling message verification is clearly not enough to guarantee a usable and responsive system.\\\\
-To detect other performance bottlenecks, we sort the Yappi report on the \emph{Self} column to get insight in methods that are taking a long time to complete. This is visible in Figure \ref{fig:yappi_breakdown_self}. An interesting observation here is that the Python built-in \emph{all} method takes up a significant amount of time (6.13\% of the runtime). The \emph{all} method takes an iterable object and returns true if all objects of this collections are true. Both the \emph{all} method and \emph{zip} method (also visible in Figure \ref{fig:yappi_breakdown_self}) is used in the \emph{\_resume\_delayed} method. Optimization of this method is considered future work and described in GitHub issue 505\footnote{https://github.com/Tribler/dispersy/issues/505}.\\\\
-
-\begin{figure}[!h]
-	\centering
-	\includegraphics[width=0.9\columnwidth]{images/experiments/yappi_breakdown_self}
-	\caption{Test.}
-	\label{fig:yappi_breakdown_self}
-\end{figure}
-
-This shows that the Yappi profiler can be a very convenient tool to detect and track performance bottlenecks. The integration in the twistd plugin makes it easy for developers to run and analyse Tribler sessions under different circumstances.
