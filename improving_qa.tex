@@ -21,6 +21,24 @@ Improving the code coverage has been done by writing small unit tests where we a
 
 In Chapter \ref{chapter:problem-description}, Figure \ref{fig:tests-ratio-tribler} we presented the ratio between the number of code lines in the tests package and the amount of other code lines over time. Together with the code coverage, this number can be a useful metric to developers. While one might argue that having a high code coverage in conjunction with a low TLC/PLC ratio is a desired result, it indicates that the tests are not granular enough and are actually doing many different things. A low code coverage with a high TLC/PLC ratio indicates that there are some flaws in the tests, possibly that they are testing the wrong components of the system. When starting the thesis, Tribler has a low code coverage together with a low TLC/PLC ratio\todo{beter uitleggen}.\\\\
 After writing additional unit tests, removal of the old user interface and addition of the new one, the new ratio is \emph{0.16} which means that there is roughly one line of test code for six lines of other source code in Tribler. Defining a good TLC/PLC ratio is dependent on the used programming language, development methodology and application structure. Discussion on the wiki of Ward Cunningham\cite{c2tlcratio} proposes an optional ratio of 1:1, however, several other ratios have been proposed on the same page such as 2:1 and 5:1. Overall, the trend seems to be that the amount of test line code is higher than the lines of production code. An important question is whether this proposed ratio also holds for Tribler. Tribler differs from a commercial software engineering project in the sense that it is used for scientific research. When performing research, it is easy to ignore testing and focus on the results that are gathered by the system. The difficulty here is that Tribler is distributed and used by over a million of users, requiring at least some form of quality assurance. We think a better optional TLC/PLC ratio for the Tribler project might be 1:2.\\\\
+
+\begin{table}
+	\begin{tabular}{ l | l | l | l | l | }
+		\cline{2-5}
+		& \multicolumn{2}{ | c | }{\textbf{November '15}} &
+		\multicolumn{2}{ | c | }{\textbf{July '16} }\\
+		\cline{2-5}
+		& Lines coverage & Branch coverage & Lines coverage & Branch coverage\\ \hline
+		\multicolumn{1}{|l|}{Core} & x & x & x & x\\ \hline
+		\multicolumn{1}{|l|}{wx GUI} & x & x & x & x\\ \hline
+		\multicolumn{1}{|l|}{Qt GUI} & x & x & x & x\\ \hline
+	\end{tabular}
+	\caption{The difference in code coverage between November '15 and July '16.}
+	\label{table:code-coverage-table}
+\end{table}
+
+\todo{tabel invullen}
+
 To make sure that the responsibility of code coverage is not neglected in future work on Tribler, an addition check for each pull request has been added that verifies that the code contributed in the respective pull request is covered by tests. While not created by the author of this thesis, this check is an effective way to keep the code coverage metric under control.
 
 \subsection{External Network Resources}
@@ -103,6 +121,13 @@ The result of the development of the new interface is displayed in Figure \ref{f
 	\label{fig:new-gui-1}
 \end{figure}
 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/improving_qa/qt_designer}
+	\caption{The Qt visualizer tool used to create the new user interface of Tribler.}
+	\label{fig:qt-designer}
+\end{figure}
+
 During development of the user interface, some issues that required some careful analysis were encountered. The remained of the Section will describe these issues in more detail.
 
 \begin{figure}[h!]
@@ -113,6 +138,11 @@ During development of the user interface, some issues that required some careful
 \end{figure}
 
 \subsubsection{\textbf{Displaying a huge amount of items}}
-\emph{Qt} allows to display possibly many items in a simple list. The performance decreases dramatically if custom widgets are rendered in a list, like we are doing. Loading 1.000 of such list items takes several seconds\todo{verify this}. Channels hold potentially several thousand of torrents which should be displayed in the user interface. This problem can be solved by using lazy-loading techniques where more data is loaded when the user has scrolled through the end of the list. This solution has also been implemented in the interface written in \emph{wxPython}. By loading only a subset of the list rows, the user experience can be increased since users don't have to wait until the whole list of items is loaded. The implementation of this lazy-loading solution is reusable and can be found in the \emph{lazyloadlist.py} source file.
+\emph{Qt} allows to display possibly many items in a simple list. The performance decreases dramatically if custom widgets are rendered in a list, like we are doing. Loading 1.000 of such list items takes several seconds\todo{verify this}. For each item in the list, the associated user interface file has to be loaded, parsed and rendered, possibly many times per second. Channels hold potentially several thousand of torrents which should be displayed in the user interface.\\\\
+This problem has been solved by using two techniques. The first one is lazy loading: by using a lazy-loading approach where more data is loaded when the user has scrolled through the end of the list, we can postpone and possibly avoid loading the whole list at once. This solution has also been implemented in the interface written in \emph{wxPython}. By loading only a subset of the list rows, the user experience can be significantly increased since users don't have to wait until the whole list of items is loaded. The implementation of this lazy-loading solution is reusable and can be found in the \emph{lazyloadlist.py} source file. This however, still resulted in a minor period of waiting when the next set of items is being loaded. It turned out that loading the interface definition file every time is a time-consuming operation. The implemented solution to reduce this processing time is to pre-load the interface definition as soon the user interface starts. This has only a minor effect on the total startup time\todo{hoeveel?}.
+
+\subsubsection{\textbf{A working VLC on multiple platform}}
+The old user interface made use of the VLC library for the implementation of the embedded video player. This embedded video player did not function on OS X due to incompatibilities with the wx library used for the implementation of the old interface. Requiring  
 
 \section{Improving Sofware Artifacts}
+% TODO: schrijf over documentation
