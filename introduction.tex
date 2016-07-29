@@ -19,7 +19,7 @@ Figure \ref{fig:technical-debt-quadrant} presents this distinction in more detai
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=0.5\columnwidth]{images/technical_debt_quadrant}
+	\includegraphics[width=0.5\columnwidth]{images/introduction/technical_debt_quadrant}
 	\caption{The technical debt quadrant, as proposed by Martin Fowler.}
 	\label{fig:technical-debt-quadrant}
 \end{figure}
@@ -35,15 +35,23 @@ This is not always the case with technical debt: there might be some situations 
 For instance, if it is known for a part of the system to never be updated or maintained in the future, time can be saved by not updating the related documentation.
 Software engineers have to carefully consider what technical debt they wish to incur and when this debt will be paid off.\\\\
 There are several causes that contribute to the amount of accumulated technical debt during the software development process\cite{martini2014architecture}. While notable to a lesser extent in research-oriented software engineering, time pressure can cause developers to think reckless about their architecture. Uncertainty in  decision making during an early stage of development might lead to higher technical debt. Finally, in an agile environment, software requirements might change more often, causing the underlying architecture and code base to change. Not properly managing such changes can lead to significant technical debt.\\\\
-Tribler is the result of 10 ongoing years of scientific research in the field of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
-The software allows users to discover and download interesting content such as music and videos in a completely decentralized manner.
-In 2014, support for anonymous download using a Tor-like protocol has been added by the work of R. Plak\cite{plak2014anonymous} and J.H. Tanaskoski\cite{tanaskoski2014anonymous}. 
+Technical debt often becomes a noticeable problem in large systems, having a large number of contributors. Tribler is an example of such a system. The software is the result of 10 ongoing years of scientific research in the field of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
+Tribler is the combination of four disruptive techniques in one large code base: BitTorrent, allowing users to download files in a decentralized matter, Tor, providing anonymity and strong encryption, Bitcoin, providing a way to introduce the notion of trustworthiness inside the network and Wikipedia, providing collaborative editing of content. This is depicted in Figure \ref{fig:tribler-connections}.\\
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.6\columnwidth]{images/introduction/tribler_connections}
+	\caption{The four disruptive technologies as integrated in Tribler.}
+	\label{fig:tribler-connections}
+\end{figure}
+
+Anonymity by using a Tor-like protocol has been added In 2014 by the work of R. Plak\cite{plak2014anonymous} and J.H. Tanaskoski\cite{tanaskoski2014anonymous}. 
 In 2015, the protocol has been extended to support for anonymous seeding of torrents\cite{ruigrok2015bittorrent}.
 The graphical user interface of Tribler is shown in figure \ref{fig:tribler-interface}.
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=0.9\columnwidth]{images/tribler_interface}
+	\includegraphics[width=0.9\columnwidth]{images/introduction/tribler_interface}
 	\caption{The graphical user interface of Tribler v6.5.2.}
 	\label{fig:tribler-interface}
 \end{figure}
@@ -52,7 +60,7 @@ The graphical user interface of Tribler is shown in figure \ref{fig:tribler-inte
 
 The focus of this thesis will be tracking and managing technical debt in Tribler. The following research question can be formulated:\\\\
 \emph{How can we track and manage technical debt within Tribler?}\\\\
-This question can be divided into some subquestions:
+This question can be divided into some sub questions:
 \begin{enumerate}
 	\item What tools should be used to identity technical debt within Tribler?
 	\item What kind of technical debt should be prioritized for fixing?

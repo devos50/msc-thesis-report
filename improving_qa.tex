@@ -1,9 +1,19 @@
 \label{chapter:refactoring}
 \chapter{Improving Software Metrics and Refactoring}
-In Chapter \ref{chapter:problem-description}, the huge accumulated amount of technical debt in the system has been highlighted. A new robust and future-proof architecture has been proposed in Section \ref{chapter:architecture}. In this Chapter, the most important activities during the span of this thesis work will be presented. This includes a developer-friendly REST API and, a modern, simplistic and user-friendly grahical user interface and major important modifications to the available testing framework.
+In Chapter \ref{chapter:problem-description}, the huge accumulated amount of technical debt in the system has been highlighted. A new robust and future-proof architecture has been proposed in Section \ref{chapter:architecture}. In this Chapter, the most important activities during the span of this thesis work will be presented. This includes a developer-friendly REST API and, a modern, simplistic and user-friendly grahical user interface, major important modifications to the available testing framework and refactoring of several components that can be found in Tribler. A summary of the refactoring efforts conducted is displayed in Table \ref{table:refactoring-summary}.\\\\
 
-\section{General Overview and Statistics}
-According to GitHub, 155 Pull Requests have been accepted, which account for a total of 401 commits. In total, 27.659 lines have been added and 12.581 lines have been removed. 765 files have been modified. These statistics excludes the removal of \emph{wxPython} GUI code which account for 12.429 deletions.
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{|l|l|}
+		\hline
+		\textbf{Lines modified} & 765 \\ \hline
+		\textbf{Lines added} & 12.429 \\ \hline
+		\textbf{Lines deleted (without GUI)} & 12.581 \\ \hline
+		\textbf{Lines deleted (with GUI)} & 25.010 \\ \hline
+	\end{tabular}
+	\label{table:refactoring-summary}
+	\caption{A summary of refactoring efforts as conducted during this thesis.}
+\end{table}
 
 \section{Improving tests and testability}
 The most fundamental way to verify the correctness of software detect issues as soon as possible in the development cycles, is by having an exhaustive test suite. As described in Chapter \ref{chapter:problem-description}, the current test suite is plagued with unstable and non-functional tests. This section will discuss the performed work to strengthen and stabilize the test suite.
@@ -51,9 +61,21 @@ Well-designed tests should only fail if some new code is breaking existing funct
 During this thesis, many race conditions have been detected and solved. One interesting observation is that some issues only occurred on a specific platform. We believe can be explained by differences in the implementation of underlying threading model across operating systems. The most common cause of failing tests can be addressed to delayed calls in the Twisted reactor. During the test execution, Tribler is restarted many times. If a developer leaves by accident a delayed call behind when the shut down procedure has been completed, this delayed call might be executed in the wrong Tribler session, possibly leading to an inconsistent state of the system. Making sure the reactor is completely clean is not straightforward: if one is not aware of scheduled calls in the system, the mistake is easily made.\\\\
 Writing stable tests also requires the test to be limited in what they do. Each test should only be focussed on the specific part of the system that has to be tested\todo{cite?}. While often unnecessary, a significant amount of the available tests are focused on starting a complete Tribler session, testing a small subset of the system, and shutting down Tribler again. While this approach is relatively easy to code, starting a fully-fledged session often leads to more instability and unexpected side-effects during test execution. Instead, only the classes to be tested should be instantiated and any dependencies this class have, should be mocked. Mocking ensures that developers have control over dependencies, allowing them to specify any expected return value. Moreover, the execution time of these small unit tests is significantly lower than the tests where a Tribler session is managed. The additional unit tests that have been written during this thesis, are following the described design.
 
-\subsection{Multi-Platform}
-During the past 10 years of contributions to Tribler, several platform-specific workarounds have been implemented. Since tests are only executed on one platform (Linux), code that runs only in a Windows or OS X environment is never tested. This problem can be solved by running the tests on multiple platforms. This will allow developers to detect defects on other platforms more earlier in the development process. By aggregating the generated coverage report on each platform, the code coverage metric should also increase.\\\\
-The setup of the testing environments on Windows and OS X is straightforward. New slave nodes to specify the Windows and OS X test runners have been created. The tests on OS X are executed on a Mac Mini\todo{specs}. In order to run the tests on Windows, two virtual machines using Proxmox have been created, both 32-bit and 64-bit environments. In total, the tests are executed on four platforms now: Linux, Windows 32-bit, Windows 64-bit and OS X. So far, the OS X and Windows test executers have completed over 2.500 test runs. Each test runner generates a coverage reports and these reports are merged in the final analyse step in the build pipeline.
+\subsection{Continuous Integration Enhancements}
+Tribler makes use of the popular continuous integration (CI) platform Jenkins. Jenkins allows developers to define jobs which can be executed manually or when pushing a commit on the code base. This continuous integration platform is responsible for running the tests, packaging Tribler and running research-oriented experiments.\\\\
+When we focus on the execution of the tests, it is immediately noticed that they are only executed in a Linux environment. Beller et al\cite{beller2016oops} conducted research on CI adoption and usage and it turned out that for some languages, it might benefit to run tests in different environment. An addition argument for this is the usage of many platform-specific workarounds we are using in Tribler. To make sure that these statements are covered, we must run the tests in this environment. This will allow developers to detect defects on other platforms more earlier in the development process. By aggregating the generated coverage report on each platform, this multi-platform setup should benefit the code coverage.\\\\
+The setup of the testing environments on Windows and OS X is straightforward. New slave nodes to specify the Windows and OS X test runners have been created. The tests on OS X are executed on a Mac Mini\todo{specs}. In order to run the tests on Windows, two virtual machines using Proxmox have been created, both 32-bit and 64-bit environments. In total, the tests are executed on four platforms now: Linux, Windows 32-bit, Windows 64-bit and OS X. So far, the OS X and Windows test executers have completed over 2.500 test runs. Each test runner generates a coverage reports and these reports are merged in the final analyse step in the build pipeline.\\\\
+While this is certainly a step in the right direction, there are various additional steps in the execution plan that can be performed. In Figure \ref{fig:jenkins-pipeline}, the ideal test execution plan is displayed, together with the various stages in this pipeline. We start by executing the tests on multiple platforms where during these runs, the code coverage is being tracked. After this phase, the coverage reports are combined and the total difference with the upstream branch is determined. When the commit decreases the total code coverage, the job fails.\\\\
+A static Pylint checker has been available to check for code style violations, however this only gave insight in the total amount of Pylint errors and did not stimulate to actually fix errors in the committed code. While not implemented by the author of this thesis, the Pylint checker has been extended to fail if new violations are introduced in the committed code. Additionally, a report is generated with an overview of the introduced violations. This helps developers to get more aware of the code style. This checker is ran in parallel with the tests to decrease the total time of the pipeline execution.\\\\
+After the coverage phase has passed, jobs to package Tribler for distribution should be added. In parallel, the \emph{AllChannel} experiment can be executed. This experiment is executed on the DAS5 supercomputer and starts 1.000 Tribler clients that are synchronizing torrents and channels with each other. When the experiment is completed, several graphs are generated, providing developers insights in the consequences of their modified code when Tribler runs in a more comprehensive environment. For instance, the experiment can highlight issues in the message synchronization between peers in the network.\\\\
+In parallel with the \emph{AllChannel} experiment, we can package Tribler for distribution to end-users. On Windows, an installer will be created that installs Tribler to the \emph{Program Files}. On OS X, we create a \emph{DMG} file that contains an app bundle. On Linux, the required files are bundled in a \emph{deb} archive. All these jobs can be executed in parallel. Finally, we should test whether the final distributions are working. This should be achieved by executing the final Tribler executable. A small test suite that makes use of the REST API can be created.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{images/improving_qa/jenkins_pipeline}
+	\caption{The desired test execution plan in our continuous integration environment. Dashed boxes are not implemented yet.}
+	\label{fig:jenkins-pipeline}
+\end{figure}
 
 \section{REST API}
 As described in Chapter \ref{chapter:architecture}, communication between the graphical user interface and the Tribler core is facilitated using a REST API. This Section explains the implementation of the API in more detail.\\\\
@@ -121,13 +143,6 @@ The result of the development of the new interface is displayed in Figure \ref{f
 	\label{fig:new-gui-1}
 \end{figure}
 
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=1.0\columnwidth]{images/improving_qa/qt_designer}
-	\caption{The Qt visualizer tool used to create the new user interface of Tribler.}
-	\label{fig:qt-designer}
-\end{figure}
-
 During development of the user interface, some issues that required some careful analysis were encountered. The remained of the Section will describe these issues in more detail.
 
 \begin{figure}[h!]
@@ -142,7 +157,37 @@ During development of the user interface, some issues that required some careful
 This problem has been solved by using two techniques. The first one is lazy loading: by using a lazy-loading approach where more data is loaded when the user has scrolled through the end of the list, we can postpone and possibly avoid loading the whole list at once. This solution has also been implemented in the interface written in \emph{wxPython}. By loading only a subset of the list rows, the user experience can be significantly increased since users don't have to wait until the whole list of items is loaded. The implementation of this lazy-loading solution is reusable and can be found in the \emph{lazyloadlist.py} source file. This however, still resulted in a minor period of waiting when the next set of items is being loaded. It turned out that loading the interface definition file every time is a time-consuming operation. The implemented solution to reduce this processing time is to pre-load the interface definition as soon the user interface starts. This has only a minor effect on the total startup time\todo{hoeveel?}.
 
 \subsubsection{\textbf{A working VLC on multiple platform}}
-The old user interface made use of the VLC library for the implementation of the embedded video player. This embedded video player did not function on OS X due to incompatibilities with the wx library used for the implementation of the old interface. Requiring  
+The old user interface made use of the VLC library for the implementation of the embedded video player. This embedded video player did not function on OS X due to incompatibilities with the wx library used for the implementation of the old interface.
+
+\section{Improvements to the threading model and performance}
+The work as described in the last two sections, has led to a better and stable threading model. The complex threading model as used by Tribler 6 is vulnerable for bad code practices, leading to confusion and race conditions. The old threading model is visible in Figure \ref{fig:old-threading-model}. In most Twisted applications, the reactor runs on the main thread of the Python application. In Tribler, the reactor runs on a separate thread since our main thread is occupied by the \emph{wxPython} main loop. User interface-related code such as refresh operations of lists, should always be executed on the Python main thread. Twisted operations however, should be scheduled on the reactor thread. The Twisted threadpool provides some additional threads to dispatch work to and can be used for longer-running operations that should not block the main or reactor thread. Several method decorators have been introduced to make thread switching much easier to implement. These decorators are also visible in Figure \ref{fig:old-threading-model}.\\
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{images/improving_qa/threading_model_tribler}
+	\caption{The threading model in Tribler 6, together with the primitives to schedule operations on different threads.}
+	\label{fig:old-threading-model}
+\end{figure}
+
+Developers should be aware of the threading context when implementing new features. Long blocking calls on the main thread should be avoided as much as possible since they lead to an unresponsive user interface. Database calls however, should be scheduled on the reactor thread. This threading model leads to much unnecessary confusion and is prone to errors.\\\\
+Developing the new user interface came with an additional advantage. Now that the user interface runs in a separate process, we have the opportunity to run the reactor on the main thread. This allows us to get rid of the confusing decorators since we only have one thread (besides the threadpool) to schedule calls on. Getting rid of the abundant thread switching should increase performance since we avoid overhead introduced by the context switch.
 
 \section{Improving Sofware Artifacts}
-% TODO: schrijf over documentation
+During the last ten years of development on Tribler, the main focus of the project has been to deliver working code. The project had a severe lack of maintained software artifacts, including documentation, comments and architectural diagrams. Most of the conducted research was documented on the Tribler wiki\footnote{https://www.tribler.org/TitleIndex/}, however, this wiki is very outdated and not maintained anymore. After the migration of the project to GitHub, this platform was favoured over continued usage of the Tribler wiki archive.\\\\
+At the moment, there are several distinct locations where we store the few software artifacts we have. Documentation is either stored in the GitHub wiki or in the `docs` directory in the Tribler source code. The ideal situation is to have one single, useful location for all generated documents during the process. Many Python projects are using \emph{readthedocs}, a platform to host documentation for free. The hosted documentation should be located in the Tribler repository, in \emph{reStructuredText} (RST) format. By using the Python module Sphinx, a HTML website can be generated from all the available documentation. Sphinx also provides tool for localization of documentation.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/improving_qa/readthedocs}
+	\caption{The documentation of Tribler, as displayed on the \emph{readthedocs} website.}
+	\label{fig:old-threading-model}
+\end{figure}
+
+During this thesis, all available documentation of Tribler has been rewritten to make use of RST in conjunction with \emph{Sphinx}. Moreover, the available documentation has been improved with several guides, in particular, guides that help users to create a developer environment on their machine. Prior, these guides were not available and development on other platforms than Linux was not supported. By the addition of these guides, new developers can start as soon as possible with development on Tribler.
+
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/improving_qa/qt_designer}
+	\caption{The Qt visualizer tool used to create the new user interface of Tribler.}
+	\label{fig:qt-visualizer}
+\end{figure}

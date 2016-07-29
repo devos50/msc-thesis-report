@@ -1,4 +1,4 @@
-\chapter{Architecure and Design}
+\chapter{Architecture and Design}
 \label{chapter:architecture}
 
 Before we reach the point of discussing a new future-proof, modern architecture and design of Tribler, the evolution of the Tribler architecture  throughout the last 10 years will be elaborated. Understanding the past decisions regarding architecture and design, will help us to shed light on the question why Tribler has accumulated such an amount of technical debt.\\\\
@@ -40,14 +40,14 @@ The next version of Tribler, version 4.0, got released in 2007\cite{tribler4tf}.
 	\label{fig:tribler4}
 \end{figure}
 
-\subsection{Libswift}
-\todo{stukje over libswift hier}.
+\subsection{Tribler 5.x}
+The development of Tribler continued with the release of Tribler 5.0 in 2009\cite{historyoftribler}.  The interface got a complete overhaul, introducing a more dark theme, which was replaced by a white theme a short while after the release. In the 5.x series, several improvements to Tribler itself and the user interface has been made. The focus of Tribler 5.0 has been on remote search and downloads. The thumbnails have been dropped and the search results are displayed in a paginated list instead.\\\\
+Tribler 5.1 contained some major improvements to the user interface, thanks to the feedback of the community. A new major addition have been added to Tribler 5.2: the concepts of channels, similar to YouTube, has been introduced. One goal of channels was to prevent spam inside the network by favouring content in more popular channels. The popularity indicator associated with each torrent got removed but has been placed back later. In Tribler 5.3, all custom widgets got replaced by native buttons, creating a more native feel on each platform. A tag cloud has been added to the home page of Tribler to help users determine which content they possibly want to look for. Moreover, the paginated list was replaced by a single, scrollable list of items. Tribler 5.4 introduced a magic search feature where similar search results are collapsed using text similarity functions and digit extraction. This leads to a much cleaner and comprehensive results list when searching.\\\\
+The final release in the 5.x series, Tribler 5.9, bought some major additions. The complete BuddyCast core has been rewritten, moving away from a TCP overlay to an implementation based on UDP, bringing huge benefits to the compatibility with NAT-firewalls. Also, \emph{libswift} has been introduced as the new download engine, providing download capabilities over UDP, removing the TCP layer from libtorrent.
 
-\subsection{Tribler 5.0}
-The development of Tribler continued with the release of Tribler 5.0 in 2009. The vision of this new  The interface got a complete overhaul, introducing a more dark theme.
+\section{Tribler 6.x}
+Shortly after the release of Tribler 5.9, Tribler 6.0 is released where a complete new user interface has been implemented. This version contained also some minor bug fixes that increased performance and usability. After the release of 6.0.1, several smaller releases (6.1, 6.2 and 6.3) were released. The focus shifted toward anonymous downloads and end-to-end encryption. These features were part of the Tribler 6.4 release, providing an experimental anonymous download mechanism and hidden seeding services. Moreover, the \emph{libswift} dependency got dropped since it was not stable enough. This release also introduced the TFTP protocol, used to transfer torrent files between peers in Tribler. The next release, Tribler 6.4.1, contained some major security fixes after an external code review.\\\\
 
-\section{Tribler 6}
-Here something about Tribler 6.
 
 \section{Defining the future of Tribler}
 In the previous Section, the evolution of Tribler has been evolved, up to the current architecture. We now turn our attention to the future of Tribler and propose a new architecture that will enable Tribler for another 10 year of research. The proposed architecture is visible in Figure \ref{fig:tribler7}. This architecture follows a layered approach with a clear distinction between the visible layers. This Section will discuss the proposed design and highlight decisions that have been made during the development process.
