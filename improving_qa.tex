@@ -18,19 +18,33 @@ In Chapter \ref{chapter:problem-description}, the huge accumulated amount of tec
 \section{Improving tests and testability}
 The most fundamental way to verify the correctness of software detect issues as soon as possible in the development cycles, is by having an exhaustive test suite. As described in Chapter \ref{chapter:problem-description}, the current test suite is plagued with unstable and non-functional tests. This section will discuss the performed work to strengthen and stabilize the test suite.
 
+\subsection{Identifying Code Smells}
+As described in the work of van Deursen et al\cite{van2001refactoring}, there is a difference between refactoring test code and production code in a sense that test code often has a characteristic set of code smells, originating from the way the tests are structured. Before we start to make major modifications to the test suite, we present a list of code smells identified in the test suite of Tribler. This list is visible in Table x.
+
+\begin{table}
+	\begin{tabularx}{\textwidth}{|X|X|X|}
+		\hline
+		\textbf{Code smell} & \textbf{Description} & \textbf{Solution}\\ \hline
+		Dependency on external resources & Various tests are using external resources, leading to unpredictable and unstable tests. & Remove the dependency on the resource or make sure that the resource is locally available. \\ \hline
+		State leak & The state of a previous executed test is leaking to the next test, mostly notable due to delayed calls left in the Twisted reactor. & Make sure that any delayed call in the reactor is removed when shutting down Tribler. \\ \hline
+		Too much responsibility & Many tests have multiple responsibilities, testing both parts of the user interface and core components in Tribler. & Make sure that each test is only testing one unit in the system and design separate tests for the user interface.\\ \hline
+		Slow tests & There are some slow tests (tests that are taking over 30 seconds to complete). This can be an indicator that the test is testing too much & Identify what is making the test slow and make the test as small as possible. \\ \hline
+		Unclear assertions & Tests that have multiple assertions often do not annotate their assertion well with a clear and meaningful description & Add an explanation if an assertion fails.\\ \hline
+		Dependency on a Tribler session & Some tests are starting a complete Tribler session while only a small subset of the system is tested & Use mocking techniques to inject a mocked session or refactor the component so no session is required. \\ \hline
+		Resource writing to the source directory & Various tests are writing resources to the source code directory. They might accidentally end up in the VCS if developers are not cautious. & Temporary resources produced by tests should be written to a temporary directory that is correctly cleaned after test execution. \\ \hline
+		Claiming the same local port & Some tests that are running in parallel are claiming the same local port, leading to test failures. & Reserve port ranges to individual parallel test runs. \\ \hline
+		Timing issues & Various tests are checking a condition after a fixed interval. This interval is often based on intuition rather than empirical data. This is particularly dangerous when the test is dependent on external resources. & Refactor the test so the condition check is no longer necessary.\\ \hline
+		No usage of comments & There are no comments, explaining what the the tests are testing and what the expected output is. & Comments should be added with a description of the test. \\ \hline
+	\end{tabularx}
+	\caption{Identified code smells in the test suite of Tribler as of November '15.}
+	\label{table:tests-code-smells}
+\end{table}
+
 \subsection{Improving Code Coverage}
-Code coverage is defined as the percentage of source code that is covered by at least one test in the test suite. Our continuous integration environment offers tools to track the code coverage over time. After each automated test suite execution a comprehensive report with detailed information about the code coverage is generated. The reported metrics by this report is not very accurate since some third-party libraries are included, such as the VLC bindings and \emph{pymdht}, our used implementation to fetch peers from the Distributed Hash Table (DHT). Also, the code coverage of Dispersy is included in these reports while Dispersy is considered as a separate engineering project.\\\\
+Code coverage is defined as the percentage of source code that is covered by at least one test in the test suite. Our continuous integration environment offers tools to track the code coverage over time. After each automated test suite execution a comprehensive report with detailed information about the code coverage is generated. The reported metrics by this report are not accurate enough since some third-party libraries are included in the coverage report, such as the VLC bindings and \emph{pymdht}, a library to fetch peers from the Distributed Hash Table (DHT). Also, the code coverage of Dispersy is included in these reports while we consider Dispersy as a separate engineering project.\\\\
+The difference in code coverage during the span of this thesis can be found in Table \ref{table:code-coverage-table}. Branch coverage is a metric that specifies how well conditional statements are covered. This metric includes the fact that a conditional is either resolved to true or false, possibly influencing the program execution path. In the ideal scenario, we wish to have tests that cover all conditional statements in the case they resolve to \emph{true} and in the case they resolve to \emph{false} so we cover all possible execution paths in the program. This objective gets significantly harder to achieve when code with many nested conditional statements is written. The cyclomatic complexity as developed by McCabe in 1976\cite{mccabe1976complexity} is a quantitative measure of the number of linear independent paths through a program's source code. Any conditional written has a negative effect on the cyclomatic complexity.\\\\
+While at first sight it may look like the code coverage has not increased significantly, we should emphasize that the complete architecture of the tests have been overhauled in parallel. Refactoring of the test suite had consequences on the code coverage in other locations in the code base. For instance, the smaller unit tests are not starting the old user interface, leading to a lower coverage in that module.\\\\
 Improving the code coverage has been done by writing small unit tests where we are using mocked objects to have better control over the system we are testing. Using mocking in Tribler is a necessary since some components have many other dependencies that are hard to keep under control without using custom, controlled objects. Libtorrent is a good example of this. During this thesis, many unit tests have been written as can be seen in Figure x where the number of unit tests over time is presented. Writing tests makes a developer more aware of the written code and can be a good way to get familiar with an unknown system. Due to this, various bugs have been solved during the process of writing additional tests.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.8\columnwidth]{images/improving_qa/test_trend}
-	\caption{The number of tests over time.}
-	\label{fig:importgraph-qt-gui}
-\end{figure}
-
-In Chapter \ref{chapter:problem-description}, Figure \ref{fig:tests-ratio-tribler} we presented the ratio between the number of code lines in the tests package and the amount of other code lines over time. Together with the code coverage, this number can be a useful metric to developers. While one might argue that having a high code coverage in conjunction with a low TLC/PLC ratio is a desired result, it indicates that the tests are not granular enough and are actually doing many different things. A low code coverage with a high TLC/PLC ratio indicates that there are some flaws in the tests, possibly that they are testing the wrong components of the system. When starting the thesis, Tribler has a low code coverage together with a low TLC/PLC ratio\todo{beter uitleggen}.\\\\
-After writing additional unit tests, removal of the old user interface and addition of the new one, the new ratio is \emph{0.16} which means that there is roughly one line of test code for six lines of other source code in Tribler. Defining a good TLC/PLC ratio is dependent on the used programming language, development methodology and application structure. Discussion on the wiki of Ward Cunningham\cite{c2tlcratio} proposes an optional ratio of 1:1, however, several other ratios have been proposed on the same page such as 2:1 and 5:1. Overall, the trend seems to be that the amount of test line code is higher than the lines of production code. An important question is whether this proposed ratio also holds for Tribler. Tribler differs from a commercial software engineering project in the sense that it is used for scientific research. When performing research, it is easy to ignore testing and focus on the results that are gathered by the system. The difficulty here is that Tribler is distributed and used by over a million of users, requiring at least some form of quality assurance. We think a better optional TLC/PLC ratio for the Tribler project might be 1:2.\\\\
 
 \begin{table}
 	\begin{tabular}{ l | l | l | l | l | }
@@ -39,17 +53,49 @@ After writing additional unit tests, removal of the old user interface and addit
 		\multicolumn{2}{ | c | }{\textbf{July '16} }\\
 		\cline{2-5}
 		& Lines coverage & Branch coverage & Lines coverage & Branch coverage\\ \hline
-		\multicolumn{1}{|l|}{Core} & x & x & x & x\\ \hline
-		\multicolumn{1}{|l|}{wx GUI} & x & x & x & x\\ \hline
-		\multicolumn{1}{|l|}{Qt GUI} & x & x & x & x\\ \hline
+		\multicolumn{1}{|l|}{Core} & 71,2\% & 58,1\% & 81,2\% & 67,3\%\\ \hline
+		\multicolumn{1}{|l|}{REST API} & - & - & 99,4\% & 92,7\%\\ \hline
+		\multicolumn{1}{|l|}{wx GUI} & 65,8\% & 42,7\% & - & -\\ \hline
+		\multicolumn{1}{|l|}{Qt GUI} & - & - & 70,0\% & x\\ \hline
 	\end{tabular}
 	\caption{The difference in code coverage between November '15 and July '16.}
 	\label{table:code-coverage-table}
 \end{table}
 
-\todo{tabel invullen}
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.8\columnwidth]{images/improving_qa/test_trend}
+	\caption{The number of tests over time.}
+	\label{fig:importgraph-qt-gui}
+\end{figure}
 
+In Chapter \ref{chapter:problem-description}, Figure \ref{fig:tests-ratio-tribler} we presented the ratio between the number of code lines in the tests package and the amount of other code lines over time. Together with the code coverage, this number can be a useful metric to developers. While one might argue that having a high code coverage in conjunction with a low TLC/PLC ratio is a desired result, it indicates that the tests are not granular enough and are actually doing many different operations. A low code coverage with a high TLC/PLC ratio indicates that there are some flaws in the tests, possibly that they are testing the wrong components of the system. When starting the thesis, Tribler has a low code coverage together with a low TLC/PLC ratio\todo{beter uitleggen}.\\\\
+After writing additional unit tests, removal of the old user interface and addition of the new one, the new ratio is \emph{0.16} which means that there is roughly one line of test code for six lines of other source code in Tribler. Defining a good TLC/PLC ratio is dependent on the used programming language, development methodology and application structure. Discussion on the wiki of Ward Cunningham\cite{c2tlcratio} proposes an optional ratio of 1:1, however, several other ratios have been proposed on the same page such as 2:1 and 5:1. In the work described in \cite{van2001refactoring}, an ideal ratio of 1:1 is proposed. Overall, the trend seems to be that the amount of test line code is around the same or a bit higher than the lines of production code. An important question is whether this proposed ratio also holds for Tribler. Tribler differs from a commercial software engineering project in the sense that it is used for scientific research. When performing research, it is easy to ignore testing and focus on the results that are gathered by the system. The difficulty here is that Tribler is distributed and used by over a million of users, requiring at least some form of quality assurance. We think a better optional TLC/PLC ratio for the Tribler project might be 1:2.\\\\
 To make sure that the responsibility of code coverage is not neglected in future work on Tribler, an addition check for each pull request has been added that verifies that the code contributed in the respective pull request is covered by tests. While not created by the author of this thesis, this check is an effective way to keep the code coverage metric under control.
+
+\subsection{Testing the New User Interface}
+One of the issues in the old testing framework, was that there is no clear separation between tests that are testing the user interface and tests that are testing core functionalities of Tribler. This is one of the reasons that have led to big, extensive tests in the old test suite. Since testing is an important aspect of this thesis work, writing proper tests for the user interface has been a prioritized task earlier in the development process of the new user interface.\\\\
+GUI testing is an interesting area in the field of software engineering and is part of the application testing methodology. GUI testing can also be more involving than unit testing since a user interface might have many different operations\todo{afmaken, cites etc}.\\\\
+Testing the new Qt user interface makes use of the \emph{QTest} framework. This framework provides various tools to perform non-blocking waits and to  simulate mouse clicks and keyboard actions. A sample of a test written with the \emph{QTest} framework is illustrated in Listing \ref{lst:qtest-sample}. After the interface is started, the test navigates to the home page, clicks on the \emph{channels} tab button and waits for items to be loaded. During the test execution, two screenshots are captured, one when we are loading items and another one when the requested items are loaded and displayed.\\\\
+Primitives to capture screenshots during test execution has already been implemented and used in the old test suite, using the rendering engine of \emph{wxPython}. The \emph{Qt} frameworks offers similar tools. Captured screenshots are exported to \emph{jpg} files under a name specified by the developer. In the sample given in Listing \ref{lst:qtest-sample}, the exported screenshots are saved as \emph{screenshot\_home\_page\_channels\_loading.jpg} and \emph{screenshot\_home\_page\_channels.jpg} respectively. At the end of each test run, an image gallery is generated where the generated screenshots are archived and displayed in a grid. This allows developers to manually verify whether visual elements are correctly displayed. A part of the generated image gallery is displayed in Figure \ref{fig:jenkins-gallery}.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/improving_qa/gallery_jenkins}
+	\caption{The generated image gallery after executing of the user interface tests, generated by Jenkins.}
+	\label{fig:jenkins-gallery}
+\end{figure}
+
+To avoid dependencies on Tribler itself and thus re-introducing the problem we are trying to solve, we created a small piece of software that provides the same interface as the REST API implemented. This 'fake' API is much simpler in nature and has a very simplistic in-memory data model. The downside of this approach is that new endpoints have to be written twice, once in Tribler and once in this fake API, providing that the new endpoint will covered by a user interface test.
+
+\begin{lstlisting}[caption={A sample of a test that tests the new Qt Tribler GUI.},label={lst:qtest-sample}]
+def test_home_page_channels(self):
+	QTest.mouseClick(window.left_menu_button_home, Qt.LeftButton)
+	QTest.mouseClick(window.home_tab_channels_button, Qt.LeftButton)
+	self.screenshot(window, name="home_page_channels_loading")
+	self.wait_for_home_page_table_populated()
+	self.screenshot(window, name="home_page_channels")
+\end{lstlisting}
 
 \subsection{External Network Resources}
 On of the problems with the test suite was that dependencies on external network resources should either be removed or one should verify that the resources are under the control of the developer and always available. The test suite contains various tests where external torrent files are fetched from the internet, in particular, from the Ubuntu repository. While this repository can guarantee high availability, any downtime in this external resource can lead to failing tests. The implemented solution for this design flaw is to start up a local HTTP server that serves the torrent file. While this approach requires more code to manage this local server, it completely removes the dependency on the Ubuntu repository.\\\\
@@ -122,8 +168,8 @@ The amount of accumulated technical debt in the current graphical user interface
 
 \subsection{The current user interface}
 \todo{Better title} The current user interface is unintuitive and cluttered with widgets and many functionality that should be in the core module of Tribler, can be found at higher levels in the user interface code. There is actually no clear separation between the core and the user interface, making it hard for developers to develop and test new functionalities since they have to deal with a bigger code base. One of the goals of this thesis is to make this separation more explicit for developers so they do not have to touch interface-related code if they are not interested in that.\\\\
-The code base of the user interface is full of code smells and undesired workarounds. There is no clear, documented structure. There are several reasons for that. One of the underlying reasons for this is the mindset of developers that the user interface code base is subordinate to the code related to the core functionalities of Tribler. While it is often true that minor defects in the user interface are less critical than errors in important core functionalities, developer should always strive to write maintainable code. The fact that the user interface has undergone dramatic changes throughout the 10 years of research is the second reason that led to the unstructured code base. Making short-term decisions were clearly favoured over decisions that benefit the longer-term development process.\\\\
-If we take a closer look at the structure of the user interface code base, we see that there is no clear architecture or design. Several files with many class definitions can be found. In the \emph{widgets.py} file, we can identify 30 different widget definitions. The \emph{SearchGridManager} file acts like the glue between the Tribler core and the user interface. Most of the requests to the core are passing through method definitions inside this file.
+The code base of the user interface is full of undesired workarounds and code smells. There is no clear, documented structure to be identified throughout the code and there are several reasons for this issue. One of the underlying causes is the mindset of developers that the user interface code base is subordinate to the code related to the core functionalities of Tribler. While it is often true that minor defects in the user interface are less critical than errors in important core functionalities such as the download engine, developer should always strive to write maintainable code. The fact that the user interface has undergone dramatic changes throughout the 10 years of research is an additional reason that led to this unstructured code base. Making short-term decisions were clearly favoured over decisions that benefit the longer-term development process.\\\\
+If we take a closer look at the structure of the user interface code base, several files with many class definitions can be found. In the \emph{widgets.py} file, we can identify 30 distinct widget definitions. The \emph{SearchGridManager} file acts like the glue between the Tribler core and the user interface. Most of the requests to the core are passing through method definitions inside this file.
 
 \subsection{Building a new user interface}
 Before starting to create a new user interface, we should first decide which graphical user interface library we would like to use. There are plenty of libraries that are suited for this job. Below, several of such libraries are summarized, together with a small description and some (dis)advantages.
@@ -183,7 +229,8 @@ At the moment, there are several distinct locations where we store the few softw
 	\label{fig:old-threading-model}
 \end{figure}
 
-During this thesis, all available documentation of Tribler has been rewritten to make use of RST in conjunction with \emph{Sphinx}. Moreover, the available documentation has been improved with several guides, in particular, guides that help users to create a developer environment on their machine. Prior, these guides were not available and development on other platforms than Linux was not supported. By the addition of these guides, new developers can start as soon as possible with development on Tribler.
+During this thesis, all available documentation of Tribler has been rewritten to make use of RST in conjunction with \emph{Sphinx}. Moreover, the available documentation has been improved with several guides, in particular, guides that help users to create a developer environment on their machine. Prior, these guides were not available and development on other platforms than Linux was not supported. By the addition of these guides, new developers can start as soon as possible with development on Tribler.\\\\
+The REST API in particular has been very well documented. Since external developers can use the REST API to control Tribler, we wish to provide a clear and comprehensive documentation base for this API. To simplify the process of writing documentation, the documentation can be written as doc strings above each method. The \emph{autosummary} tool that is executed each time the documentation is built, navigates through the API code base, extracts all doc strings and generates page sections for each documented method. The doc string can also be attributed with \emph{RST} syntax. This feature decreases chances that developers accidentally forget to write documentation since the code and documentation is present in the same file instead of being spread across different files.
 
 \begin{figure}[t]
 	\centering

@@ -3,7 +3,7 @@
 
 The goal of this thesis project is to help Tribler mature from an experimental research prototype into production-level code with potentially reliable usage by millions of users.\\\\
 After careful analysis it was decided that within the context of a nine month project the strongest contribution to the future of Tribler would be a step forward in technical debt. At this point we believe the project does not need a particular focus on feature improvements, novel additional features, or boosting performance. After over ten years of software development by 44 unique contributors the amount of accumulated technical debt is worrying.\\\\
-Tribler suffers from all kinds of technical debt, including code smells, coding style violations, code complexity and feature pollution in the graphical user interface. There is even a dedicated file, called \emph{hacks.py} that facilitates some workarounds caused by incompatible software.\\\\
+Tribler suffers from all kinds of technical debt, including instability issues, race conditions, coding style violations, code complexity and feature pollution in the graphical user interface. To illustrate, there is even a dedicated file, called \emph{hacks.py} that facilitates some workarounds caused by incompatible software.\\\\
 This thesis is focussed on a round of invasive maintenance and cleaning of the code and all other infrastructure such as installers and testing environment. Our work aims to ensure that it is possible to conduct another decade of experimental distributed systems research with the Tribler code base. The alternative is continued usage and expansion of the code, which are likely to lead to a forced clean slate approach.\\\\
 The structural problem is the lack of maintenance capacity. Each contributor to the Tribler research in the form of a bachelor, master, or PhD student needs to be primarily focussed on their thesis work. A thesis requires concrete experimental results, contribution to theory, or both. We believe the lack of student enthusiasm for fixing bugs and writing documentation is the root cause of current state of the code base.\\\\
 In this remaining of this chapter, various problems within the Tribler project will be highlighted.
@@ -15,8 +15,8 @@ Continuous expansion of a system inevitably leads to feature pollution. During t
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=\columnwidth]{images/openhub_commits}
-	\caption{An history of commits on the Tribler project, as reported by OpenHub.}
+	\includegraphics[width=\columnwidth]{images/problem_description/openhub_commits}
+	\caption{A history of commits per month on the Tribler project, as reported by OpenHub.}
 	\label{fig:openhub-commits}
 \end{figure}
 
@@ -29,7 +29,7 @@ Continuous expansion of a system inevitably leads to feature pollution. During t
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=0.6\columnwidth]{images/openhub_commits_table}
+	\includegraphics[width=0.8\columnwidth]{images/openhub_commits_table}
 	\caption{Statistics about modifications to the code base, as reported by OpenHub.}
 	\label{fig:openhub-commit-stats}
 \end{figure}
@@ -56,7 +56,7 @@ The code related to the graphical user interface is of poor quality and plague w
 While the current decade of software engineering provides a plethora of visual designers that requires barely any hand-written code, our whole graphical user interface is built with code that's unmaintained and hard to read. Many features and visual elements in the graphical user interface are unnecessary and unintuitive, contributing to the technical debt. Finally, the user interface has been written with the \emph{wxPython} framework which is not maintained anymore since late 2014. The library builds upon native APIs, i.e. Cocoa on OS X and Win32 on Windows. While the library claims to be cross-platform with a native look and feel, various features in Tribler are limited to a subset of the supported platforms.
 
 \section{Unstable and incomplete testing framework}
-Proper testing is the responsibility of every developer. Over the past 10 years, this responsibility has been completely neglected by the majority of contributors. This is clearly visible in Figure \ref{fig:tests_ratio_tribler} where we plot the ratio between the amount of code lines in the tests package and the number of code lines related to other components of Tribler. Tribler has a structural lack of proper designed unit tests. Currently, around 100 tests are available. Many of these tests are taking over half a minute to complete and are bootstrapping an extensive Tribler session. Only a small fraction of the test suite has the characteristics of unit tests. Having tests that are doing a broad range of operations, inevitably leads to undesired side-effect and failing tests. No single attempt has been made to mock components of the system to simplify tests and focus on the part of the system that has to be verified.\\\\
+Proper testing is the responsibility of every developer. Over the past 10 years, this responsibility has been completely neglected by the majority of contributors. This is clearly visible in Figure \ref{fig:tests-ratio-tribler} where we plot the ratio between the amount of code lines in the tests package and the number of code lines related to production code in Tribler. Tribler has a structural lack of proper designed unit tests. Currently, around 100 tests are available\todo{code coverage?}. Many of these tests are taking over half a minute to complete and are bootstrapping an extensive Tribler session. Only a small fraction of the test suite has the characteristics of unit tests. Having tests that are doing a broad range of operations, inevitably leads to undesired side-effect and failing tests. No single attempt has been made to mock components of the system to simplify tests and focus on the part of the system that has to be verified.\\\\
 There is one more factor that contributes to the instability of the current test suite. A significant part of the test suite is depending on external network resources, ranging from trackers and seeders for a specific torrent to other peers in the decentralized network. This fragile architecture gives rise to failing tests due to unavailable nodes, unexpected responses from external peers and other unpredicted circumstances.\\\\
 In general, well designed tests exclude any dependency on external resource that is outside the control of the developer. This can be achieved by mocking method calls to return dummy data. Additionally, one can make sure that the external resource is available in the local testing environment. For instance, when a test is dependent on a specific torrent seeder, a local libtorrent session can be started that seeds this torrent.\\\\
 While Tribler is packaged and distributed for multiple platforms, unit tests in our continuous integration environment are only executed on a machine running a Linux operating system. Limiting test execution to one platform, lowers the overall code coverage and covers platform-specific bugs. Attention should be given to make our test execution multi-platform.\\\\
