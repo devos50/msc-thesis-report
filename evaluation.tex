@@ -43,8 +43,40 @@ To detect other performance bottlenecks, we sort the Yappi report on the \emph{S
 This shows that the Yappi profiler can be a very convenient tool to detect and track performance bottlenecks. The integration in the twistd plugin makes it easy for developers to run and analyse Tribler sessions under different circumstances.
 
 \section{Performance of the REST API}
-\todo{experiment}
-% Use Apache JMeter.
+The performance of the REST API is directly influencing the user experience. If the response times of API calls is high, users have to wait longer before their data is available and visible. This is why we wish to make the API serve requests as fast as possible. The experiments to assess the performance of the API will particularly focus on latency of requests, however, some other statistics will be considered such as average request time, standard deviation of the response time and throughput to get more insights in the performance of the REST API.\\\\
+The Apache JMeter application\cite{jmeter2010apache} is used to perform HTTP requests to Tribler and to gather and analyse performance statistics. The application allows to simulate a realistic user load, however, in this experiment we will limit the load to one user that performs a request every fixed interval. This request will be targeted to a specific endpoint in the API: \emph{/channels/discovered}. This exact call happens when users are pressing the \emph{discover} menu button in the new Qt GUI and the response of the request contains a list of all discovered that Tribler has discovered. As a consequence, the returned response can be rather large (in our experiments, the average response size is around 613KB). When the request is processed, a database lookup is performed to fetch all channels that are stored in the local database.\\\\
+We perform various experiments with different intervals between requests made and a fixed amount of 500 requests. First, we perform the experiment with one request every second and we expect that the system should easily be able to hand this load and serve these requests in a timely matter. Next, the frequency of requests is increased to respectively 2, 5 and 10 requests per second. Each experiment is started around five seconds after Tribler has started where we are using a pre-filled database with around 100.000 discovered torrents and 1.200 channels. A summary of the results of these experiments are visible in Table \ref{table:performance-api-results}.\\\\
+
+\begin{table}[]
+	\centering
+	\begin{tabular}{|l|l|l|l|l|l|l|}
+		\hline
+		\textbf{Requests/sec} & \textbf{Average (ms)} & \textbf{Std. dev (ms)} & \textbf{Median (ms)} & \textbf{Min (ms)} & \textbf{Max (ms)} & \textbf{KB/S} \\ \hline
+		1 & 241 & 476.34 & 76 & 56 & 4246 & 585.58\\ \hline
+		2 & 170 & 327.86 & 68 & 58 & 3394 & 1127.04\\ \hline
+		5 & 123 & 210.23 & 60 & 52 & 2082 & 2538.36\\ \hline
+		10 & 115 & 238.72 & 60 & 50 & 2450 & 4120.70\\ \hline
+	\end{tabular}
+	\caption{A summary of the experimental results when measuring the performance of the REST API.}
+	\label{table:performance-api-results}
+\end{table}
+
+The most interesting observation from this table is that it appears that requests are served faster if we are performing requests at a faster rate, indicating that Tribler is able to handle the incoming requests well. This is surprising since one would expect the results to be the other way around: when the frequency of requests is increased, the average request time increases. The result is most likely due to caching of data which might be performed by the underlying database engine.\\\\
+The standard deviation of the request times is rather large compared to the average request time. We think that this is due to the fact that Tribler is performing many different operations that are influencing the request times. For instance, other components of the systems such as Dispersy are performing database operations. If another process utilizes the connection to the database, the REST API might have to wait for a while before it acquires the lock, causing more request latency\todo{afmaken}.
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/experiments/api_performance}
+	\caption{Test.}
+	\label{fig:api-performance}
+\end{figure}
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.8\columnwidth]{images/experiments/api_bandwidth_performance}
+	\caption{The maximum theoretical bandwidth compared to the obtained bandwidth in the experiments.}
+	\label{fig:api-bandwidth-performance}
+\end{figure}
 
 \section{Start-up experience}
 The very first interaction that users have with Tribler, is the process of starting. During the boot process, various operations are performed:
