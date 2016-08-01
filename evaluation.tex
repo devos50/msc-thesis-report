@@ -1,46 +1,47 @@
+\chapter{Benchmarking and Performance Experiments}
 \label{chapter:experiments}
-\chapter{Benchmarking and Performance Regression}
 
-By quantifying user experience, we can try to understand it better and improve it. This chapter will focus on experiments that are measuring the performance of the Tribler core, with a particular focus on user experience. Various common operations executed by users in Tribler are identified, discussed and measured.
+The goal of this Chapter is to quantify the performance of various common operations performed by users in Tribler. We will perform a number of experiments and for each experiment, we will present and discuss the observed results.
 
 \section{Experiments environment}
-The experiments with the Tribler core are performed on a virtual private server. We tried to keep close to the specifications of a machine that an actual user could be using. The virtual server has 8GB of memory and 1 processor with 4 cores (with a clock speed of 2,5GHz). The used operation system is Ubuntu 15.10\todo{explain scenario file}. The experiments are not executed in an isolated environment but instead, in the wild, using the real Dispersy network. While these results may vary for different users, this setup can be used to derive estimations of the performance of Tribler from a user's perspective.\\\\
-If not stated otherwise, the default values of the Tribler configuration file are used. These default values can be found in the `defaults.py` file in the source code directory of Tribler\footnote{https://github.com/Tribler/tribler/blob/devel/Tribler/Core/defaults.py}. All communities, except for \emph{Multichain} and \emph{BarterCast}, are loaded.\\\\
-The exact steps of each experiment are specified using scenario files. In a scenario file, each line specifies a specific command of a peer at a specific time. The framework that runs these experiments, reads this file, interprets the commands to be executed and schedules them. Several constructs have been implemented to gather and write statistics to files in a processable and readable format. The usage of scenario files is already adopted in several Dispersy experiments, mainly in our \emph{AllChannel} experiment that runs on a supercomputer. We extended the usability of this approach to run a Tribler client and added various commands to support the experiments as described in this Section. The flexibility of these scenario files gives the next generation of Tribler developers a decent framework to use when doing performance analysis, scientific research and benchmarking\todo{tabel met commands?}.
+The experiments performed in this Chapter using the Tribler core are executed on a virtual private server. An important condition is to stay as close as possible to the specifications of a machine that an actual user could be using. The virtual server has 8GB of memory and 1 processor with 4 cores (where each core has a clock speed of 2.5GHz). The used operation system is Ubuntu 15.10. The experiments are not executed in an isolated, artificial environment but instead in the wild, using the deployed Dispersy network. While the obtained results may be different between users, this setup can be used to get insight in the performance of Tribler from a user's perspective.\\\\
+If not stated otherwise, the default values of the Tribler configuration file are used. These default values can be found in the `defaults.py` file in the source code directory of Tribler\footnote{https://github.com/Tribler/tribler/blob/devel/Tribler/Core/defaults.py}. In this configuration file, all communities, except for \emph{BarterCast}, are joined.\\\\
+Some of the experiments are specified by the usage of a scenario file. In such a scenario file each line specifies a specific command of a peer at a specific point in time into the experiment. Our framework to run the experiments, Gumby, contains code to read scenario files, interprets the commands to be executed and to schedule them on the reactor thread. Several utility methods have been implemented to gather and write statistics to files in a processable and readable format that can be parsed by visualization tools such as \emph{R}. The usage of scenario files is already adopted in various Dispersy experiments, mainly in our \emph{AllChannel} experiment that runs on the DAS5 supercomputer. We extended the usability of this approach to run a Tribler client and we improved the framework by adding various commands to support operations as conducted in the performed experiments in this Section. The flexibility of these scenario files gives the next generation of Tribler developers a robust framework to use when conducting performance analysis, scientific research and benchmarking\todo{tabel met commands?}.
 
 \section{Profiling Tribler on low-end devices}
-The addition of a REST API allows developers to have flexibility to run Tribler remotely, for instance, on embedded devices such as a Raspberry Pi. The running Tribler instance can be controlled from external devices by performing HTTP requests. Android is another example of a device that can run Tribler. During the last years, various research have been conducted to execute Tribler on Android devices\todo{cites}. Running Tribler on a low-end device, can yield much information about bottlenecks that might not be directly visible when running Tribler on a desktop or supercomputer.\\\\
-The experiments described in this Section are executed on a Raspberry Pi, third generation with 1GB LPDDR2 ram, 4× ARM Cortex-A53, 1.2GHz CPU and 16GB storage on a microSD card. The used operating system is raspbian, the official system specifically designed for the Raspberry Pi, based on Debian.\\\\
-Regular usage of Tribler on the Raspberry Pi using the REST API have us suspected that the Raspberry Pi is under heavy load. Monitoring the process for a while, reveals that the CPU usage is often around 100\%, completely filling up one CPU core. To get a detailed breakdown of execution time per method in the code base, the Yappi profiler has been used to analyse the performance of the Tribler session. This profiler has been integrated in the \emph{twistd} Tribler plugin and can be started together with Tribler by passing a flag when starting the plugin. The output of the profiler is a \emph{callgrind} file that can be loaded and analysed by third party software. The breakdown of a 20-minute run is visible in Figure x\todo{figure}.
+The addition of a REST API allows developers an option to run and control Tribler remotely using the HTTP API. For instance, one can run Tribler on a low-end, cheap devices such as a Raspberry Pi. Android is another example of a device that can run Tribler and during the last years, various research have been conducted to explore the possibilities of Tribler on Android devices\cite{sabee2014tribler}\cite{de2014android}. Executing and profiling Tribler on a low-end device with limited resources can yield much information about bottlenecks that might not be directly visible when running Tribler on a desktop or supercomputer.\\\\
+The experiments described in this Section are all executed on a Raspberry Pi, third generation with 1GB LPDDR2 ram, 4× ARM Cortex-A53, 1.2GHz CPU and 16GB storage on a microSD card. The used operating system is Raspbian, a system specifically designed for the Raspberry Pi and derived from the desktop Debian operating system.\\\\
+Regular usage of Tribler on the Raspberry Pi using the REST API has us suspected that the Raspberry Pi is under heavy load when running Tribler. Monitoring the process for a while using the \emph{top} tool, reveals that the CPU usage is often around 100\%, completely filling up one CPU core. To get a detailed breakdown of execution time per method in the code base, the Yappi profiler has been used to gather statistics about the runtime of methods. This profiler has been integrated in the \emph{twistd} plugin and can be started together with Tribler by passing a flag. The output generated by the profiler is a \emph{callgrind} file that should be loaded and analysed by third party software. The breakdown of a 20-minute run is visible in Figure \ref{fig:yappi_breakdown}. This breakdown is generated using \emph{QCacheGrind}, a \emph{callgrind} file visualizer. In this experiment, we start with a clean state directory which is equivalent to the first boot of Tribler.
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=0.9\columnwidth]{images/experiments/yappi_breakdown}
-	\caption{Test.}
+	\caption{The breakdown of a 20-minute run of Tribler on the Raspberry Pi.}
 	\label{fig:yappi_breakdown}
 \end{figure}
 
-The file created by Yappi gives a detailed overview of the execution time of methods and can be used as a tool to detect performance bottlenecks in the system. The column \emph{Incl.} gives the inclusive cost of the function, this means the execution time of function itself and all it's including functions. The column \emph{self} gives only the execution time of the function, without considering callees. The other columns are self-explanatory and can be used to track the respective function in the source code.\\\\
-From the breakdown, it is clear that Dispersy has a big impact on the performance of Tribler when running on the Raspberry Pi. The \emph{ecdsa\_verify} method is dominating the runtime of Tribler: the method is responsible for 45.81\% of the runtime. This specific method verifies the sign of an incoming Dispersy message and is invoked every time a signed message comes in. Disabling cryptographic verification of incoming messages should improve the situation, however, this is a trade-off between security and performance. By not verifying incoming messages, fake messages by an adversary can be forged and are accepted in such as system. To verify whether the responsiveness of the system improves, we measure the CPU usage of two runs. Both runs start with a non-existing Tribler state directory and have a duration of five minutes. In the first run, we are using the default configuration of Tribler, like in most of the other experiments in this Chapter. In the second run, we disable verification of incoming messages to see how things improve. The two runs are displayed in Figure \ref{fig:raspi_cpu_usage}.\\\\
+The file created by the Yappi profiler provides a detailed overview of the execution time of methods and can be used as a tool to detect performance bottlenecks in the system. Referring to Figure \ref{fig:yappi_breakdown}, the column \emph{Incl.} denotes the inclusive cost of the function, in other words, the execution time of function itself and all the functions it calls. The column \emph{self} denotes only the execution time of the function itself, without considering callees. The other columns are self-explanatory and can be used as reference to the location of the respective function in the source code.\\\\
+If we analyse the breakdown, it is clear that Dispersy has a big impact on the performance of Tribler when running on the Raspberry Pi. The \emph{ecdsa\_verify} method (second method from the bottom) is dominating the runtime of Tribler: 45.81\% of the time Tribler is running, is spent inside this method. This specific method verifies the signature of an incoming Dispersy message and is invoked every time a signed message is received. Disabling cryptographic verification of incoming messages should improve the situation, however, this is a trade-off between security and performance: by not verifying incoming messages, fake messages by an adversary can be forged and are accepted in such as system.\\\\
+To verify whether the responsiveness of Tribler improves when we disable cryptographic verification of incoming messages, we measure the CPU usage of two runs. Both runs start with a non-existing Tribler state directory and have a duration of ten minutes. In the first run, we are using the default configuration of Tribler, like in most of the other experiments described in this Chapter. In the second run, we disable verification of incoming messages. The CPU utilization over time of the two runs are displayed in Figure \ref{fig:raspi_cpu_usage}.\\\\
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=1.0\columnwidth]{images/experiments/raspi_cpu_usage}
-	\caption{Test.}
+	\caption{The CPU utilization of one core on a Raspberry Pi device when running Tribler with different cryptographic policies.}
 	\label{fig:raspi_cpu_usage}
 \end{figure}
 
-In the Figure, some occurrences are visible where the CPU usage appears to be over 100\%. This is explained by the fact that some of the underlying code is designed to run on multiple processors. While the threading model of Tribler is limited to a single core, the runtime and interpreter might execute code on additional cores. In the run where we enable all components of the system, the CPU usage is often 100\%. When verification of Dispersy messages is disabled, we see somewhat more drops in CPU usage but the utilization jumps back immediately to higher amounts. Disabling message verification is clearly not enough to guarantee a usable and responsive system.\\\\
-To detect other performance bottlenecks, we sort the Yappi report on the \emph{Self} column to get insight in methods that are taking a long time to complete. This is visible in Figure \ref{fig:yappi_breakdown_self}. An interesting observation here is that the Python built-in \emph{all} method takes up a significant amount of time (6.13\% of the runtime). The \emph{all} method takes an iterable object and returns true if all objects of this collections are true. Both the \emph{all} method and \emph{zip} method (also visible in Figure \ref{fig:yappi_breakdown_self}) is used in the \emph{\_resume\_delayed} method. Optimization of this method is considered future work and described in GitHub issue 505\footnote{https://github.com/Tribler/dispersy/issues/505}.\\\\
+In Figure \ref{fig:raspi_cpu_usage}, some occurrences are visible where the CPU usage appears to be slightly over 100\%. This is explained by the fact that some of the underlying code is designed to run on multiple processors. While the threading model of Tribler is limited to a single core, the Python interpreter might execute code on additional cores to improve performance. In the run where we enable all components of the system, the CPU usage is often 100\%. When verification of Dispersy messages is disabled, we observe a somewhat lower CPU usage but overall, this utilization is still high. Unfortunately, disabling incoming message verification is clearly not enough to guarantee a more usable and responsive system.\\\\
+To detect other performance bottlenecks, we sort the report generated by the Yappi profiler on the \emph{Self} column to get insight in methods that are taking a long time to complete. This is visible in Figure \ref{fig:yappi_breakdown_self}. An interesting observation here is that the Python built-in \emph{all} method takes up a significant amount of time (6.13\% of the runtime). The \emph{all} method takes an iterable object and returns \emph{true} if all objects of this collections are true. Both the \emph{all} method and \emph{zip} method (also visible in Figure \ref{fig:yappi_breakdown_self}) is used in the \emph{\_resume\_delayed} method, indicating that this method might causing performance issues. Since further analysis of this method requires more knowledge of Dispersy, optimization of this bottleneck is considered future work and described in GitHub issue 505\footnote{https://github.com/Tribler/dispersy/issues/505}.\\\\
 
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=0.9\columnwidth]{images/experiments/yappi_breakdown_self}
-	\caption{Test.}
+	\caption{The breakdown of a 20-minute run of Tribler on the Raspberry Pi, sorted on the \emph{Self} column.}
 	\label{fig:yappi_breakdown_self}
 \end{figure}
 
-This shows that the Yappi profiler can be a very convenient tool to detect and track performance bottlenecks. The integration in the twistd plugin makes it easy for developers to run and analyse Tribler sessions under different circumstances.
+In this Section, we demonstrated how adequate usage the Yappi profiler can lead to the detection of bottlenecks in the system. Integration in the twistd plugin makes it convenient for developers to run and analyse Tribler sessions under different circumstances.
 
 \section{Performance of the REST API}
 The performance of the REST API is directly influencing the user experience. If the response times of API calls is high, users have to wait longer before their data is available and visible. This is why we wish to make the API serve requests as fast as possible. The experiments to assess the performance of the API will particularly focus on latency of requests, however, some other statistics will be considered such as average request time, standard deviation of the response time and throughput to get more insights in the performance of the REST API.\\\\
@@ -51,31 +52,34 @@ We perform various experiments with different intervals between requests made an
 	\centering
 	\begin{tabular}{|l|l|l|l|l|l|l|}
 		\hline
-		\textbf{Requests/sec} & \textbf{Average (ms)} & \textbf{Std. dev (ms)} & \textbf{Median (ms)} & \textbf{Min (ms)} & \textbf{Max (ms)} & \textbf{KB/S} \\ \hline
-		1 & 241 & 476.34 & 76 & 56 & 4246 & 585.58\\ \hline
-		2 & 170 & 327.86 & 68 & 58 & 3394 & 1127.04\\ \hline
-		5 & 123 & 210.23 & 60 & 52 & 2082 & 2538.36\\ \hline
-		10 & 115 & 238.72 & 60 & 50 & 2450 & 4120.70\\ \hline
+		\textbf{Requests/sec} & \textbf{Avg. (ms)} & \textbf{Std. dev (ms)} & \textbf{Median (ms)} & \textbf{Min. (ms)} & \textbf{Max. (ms)} & \textbf{KB/S} \\ \hline
+		\emph{1} & 241 & 476.34 & 76 & 56 & 4246 & 585.58\\ \hline
+		\emph{2} & 170 & 327.86 & 68 & 58 & 3394 & 1127.04\\ \hline
+		\emph{5} & 123 & 210.23 & 60 & 52 & 2082 & 2538.36\\ \hline
+		\emph{10} & 115 & 238.72 & 60 & 50 & 2450 & 4120.70\\ \hline
+		\emph{15} & 182 & 497.61 & 68 & 52 & 4937 & 3296.45\\ \hline
 	\end{tabular}
 	\caption{A summary of the experimental results when measuring the performance of the REST API.}
 	\label{table:performance-api-results}
 \end{table}
 
-The most interesting observation from this table is that it appears that requests are served faster if we are performing requests at a faster rate, indicating that Tribler is able to handle the incoming requests well. This is surprising since one would expect the results to be the other way around: when the frequency of requests is increased, the average request time increases. The result is most likely due to caching of data which might be performed by the underlying database engine.\\\\
-The standard deviation of the request times is rather large compared to the average request time. We think that this is due to the fact that Tribler is performing many different operations that are influencing the request times. For instance, other components of the systems such as Dispersy are performing database operations. If another process utilizes the connection to the database, the REST API might have to wait for a while before it acquires the lock, causing more request latency\todo{afmaken}.
+The most interesting observation from this table is that it appears that requests are served faster if we are performing requests at a faster rate, indicating that Tribler is able to handle the incoming requests well. This is surprising since one would expect the results to be the other way around: when the frequency of requests is increased, the average request time increases. The observed result is most likely due to caching of data which might be performed by the underlying database engine.\\\\
+The standard deviation of the request times is rather large compared to the average request time. We suspect that this might be explained the fact that Tribler is performing many different operations that are influencing the request times. In particular, we think that the reactor thread is busy with processing other calls that have higher priority, causing the API calls to be scheduled later. To verify this, we will run the experiment again where we enable Dispersy which is responsible for many calls in the reactor (as described in Section x\todo{verwijzing}), where five requests per second and 500 requests in total are performed. The results of this experiment are illustrated in Figure \ref{fig:api-performance}. On the left, the response times of the performed requests with a full Tribler session is displayed whereas on the right, we display the response times of the run where we disable Dispersy. Note the different scale on the vertical axis. The average request time of the plot on the right is 48 ms, significantly lower than the average of the response times when Dispersy is enabled: 123ms. While both graphs are producing a spiky pattern, the standard deviation of the right plot is 5.73. We conclude that the variation in response times is lower in the right plot and that most likely DIspersy is producing much work for the reactor thread, introducing latency when performing API requests.\\\\
+We possibly identified a key issue here: the latency in the Twisted reactor is high, causing the processing of incoming requests to be delayed. This does not only hold for the REST API, we can conclude the same for the tunnel community.\\\\
+Table \ref{table:performance-api-results} gives us another insight, namely that we it appears that the bandwidth is reducing as the number of requests per second increases. This is in particular visible if we plot the theoretical maximum bandwidth against the observed bandwidth during the experiments, see Figure \ref{fig:api-bandwidth-performance}. In this Figure, we presented both the obtained bandwidth for a full Tribler session and a session where Dispersy has been disabled. We assume that each request contains 613KB response data. The theoretical bandwidth is calculated as $ b = 613* n $ where $ n $ is the number of requests per second. This gives $ b $, the bandwidth per second. In practice, we will never reach the theoretical bandwidth since some time is required to create the connection and to process the response data in Tribler. We still notice that the obtained bandwidth is somewhat becoming constant, indicating that the bandwidth we can obtain is limited. This picture clearly shows the impact of a running Dispersy on the bandwidth. Whereas we almost obtain the theoretical output when we disable Dispersy, the gap between the theoretical and observed bandwidth becomes bigger in the run where we use a full session\todo{overal horizontal axis/vertical axis uitleggen}.
 
-\begin{figure}[!h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=1.0\columnwidth]{images/experiments/api_performance}
-	\caption{Test.}
-	\label{fig:api-performance}
+	\includegraphics[width=1.0\columnwidth]{images/experiments/api_bandwidth_performance}
+	\caption{The maximum theoretical bandwidth compared to the obtained bandwidth (using a full Tribler session and disabled Dispersy) in the experiments.}
+	\label{fig:api-bandwidth-performance}
 \end{figure}
 
-\begin{figure}[!h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.8\columnwidth]{images/experiments/api_bandwidth_performance}
-	\caption{The maximum theoretical bandwidth compared to the obtained bandwidth in the experiments.}
-	\label{fig:api-bandwidth-performance}
+	\includegraphics[width=1.0\columnwidth]{images/experiments/request_times_comparison}
+	\caption{Test.}
+	\label{fig:api-performance}
 \end{figure}
 
 \section{Start-up experience}
@@ -92,12 +96,12 @@ In both plots, some outliers are present. Further analysis learns us that these 
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=0.6\columnwidth]{images/experiments/startup}
-	\caption{Test.}
+	\includegraphics[width=1.0\columnwidth]{images/experiments/startup}
+	\caption{The boot time of Tribler from a clean and pre-filled state using the code base in November '15 and July '16.}
 	\label{fig:startup_experiment}
 \end{figure}
 
-\section{Content Search}
+\section{Remote Content Search}
 We wish to serve relevant information to users as fast as possible. To help users search for relevant content, a remote keyword search has been implemented. Matching search results can either be torrents or channels. Channel results are fetched by a query in the \emph{AllChannel} community whereas torrent results are retrieved by a query in the \emph{search} community.\\\\
 To verify the speed of the remote torrent search, various experiments are conducted. We are using a list of 100 terms that users might be searching for. This list of search terms can be found in Appendix x\todo{Add this}. Each query is executed when there are at least 20 connected peers in the \emph{SearchCommunity}. The timeout period of the remote search is 60 seconds. This experiment has a particular focus on two statistics: the time until the first remote torrent search results comes in and the turnaround time of the search request. We should note that users performing a remote search might see results earlier since in parallel, a  search query in the local database is performed. The results are visible in Figure \ref{fig:remote_search_first_result} and \ref{fig:remote_search_all_result}.\todo{nitin graph}\\\\
 Overall, the remote torrent search as implemented in Tribler is very fast and performs well. On average, 61 search results are returned for each query and the first incoming torrent result takes 0.26 seconds to arrive. As we see in Figure \ref{fig:remote_search_first_result}, over 90\% of the first remote search results are available to the user within a second. During our experiment, we always have the first incoming torrent result within 3.5 seconds.\\\\
@@ -105,20 +109,31 @@ The other graphs shows the turnaround time of the request. On average, it takes 
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=0.6\columnwidth]{images/experiments/cdf_remote_search_first_results}
-	\caption{Test.}
-	\label{fig:remote_search_first_result}
+	\includegraphics[width=1.0\columnwidth]{images/experiments/cdf_remote_search}
+	\caption{The performance of remote content search, expressed in the time until the first response and time until last response.}
+	\label{fig:remote_search}
 \end{figure}
 
-\begin{figure}[!h]
+\section{Local Content Search}
+In the previous Section, we demonstrated and elaborated the performance of the remote content search algorithm. Now, we will shift the focus to performance measurements of a local content search, which is considered more trivial than the remote search counterpart where network communication is required. In particular, our goal is to quantify the performance gain or loss when switching to the new relevance ranking algorithm, as described in Section x\todo{schrijven}.\\\\
+The setup of the experiment is as follows: a database with a little over 100.000 torrents is used. Every second, we perform a local \emph{torrent} search and we do this for 1.000 random keywords that are guaranteed to match at least one torrent in database. We will measure both the time for the database lookup and the time it takes for the data to be post-processed after being fetched from the database. This post-processing step involves the assignment of a weight to each of the results so the list can be sorted on relevance. This experiment is performed for the old ranking algorithm that uses the Full Text Search 3 (FTS3) engine and the new ranking algorithm that uses the more recent FTS4 engine. According to the SQLite documentation, FTS3 and FTS4 are nearly identical, however, FTS4 contains an optimization where results are returned faster when performing searches that are common in the database. The results of the experiments are visible in Figure \ref{fig:local-search-fts3-fts4}, displayed in an ECDF.\\
+
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.6\columnwidth]{images/experiments/cdf_remote_search_all_results}
-	\caption{Test.}
-	\label{fig:remote_search_all_result}
+	\includegraphics[width=1.0\columnwidth]{images/experiments/local_search_fts3_fts4}
+	\caption{A comparison of the performance of local keyword searches between the old ranking algorithm with the FTS3 engine and the new ranking algorithm utilizing the FTS4 engine.}
+	\label{fig:local-search-fts3-fts4}
 \end{figure}
 
-\section{Local keyword search}
-...
+Local content search is very fast, delivering results in several milliseconds and low priority should be given to performance engineering on the local content search engine. We see that the two lines in the FTS3 and FTS4 graphs have moved closer to each other which means that the speed of the post-processing of torrent results have increased. This is in line with our expectations since the new relevance ranking algorithm should be less computationally expensive than the old one. In addition, the new algorithm takes less factors in considering, for instance, the swarm health of the torrent. The performance increase from FTS3 to FTS4 is visible but not significant.\\\\
+In 2009, Nitin et al. performed the same experiment where they used 50.000 torrents in their database. The generated ECDF is displayed in Figure \ref{fig:local-search-nitin}. We notice that the current performance of local search in our experiment is dramatically better than the performance obtained during the 2009 experiment. This can be explained by the fact that Tribler used a custom inverted index implementation when the experiment in 2009 was conducted. An inverted index is an index data structure where a mapping is stored from words to their location in the database and is used on a large scale by search engines, including the FTS engine of SQLite. By utilizing this mapping when performing a full text search, we can get results in constant time. However, there is a slight overhead for maintaining and building the inverted index when new entries are added to the database, also impacting the size of the database disk file. The built-in FTS engine of SQLite is optimized to a large extent and clearly offers a higher performance than a custom implementation.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/experiments/nitin_local_search}
+	\caption{The performance of a local database query as verified by Nitin et al. in 2009.}
+	\label{fig:local-search-nitin}
+\end{figure}
 
 \section{Video streaming}
 The embedded video player in Tribler allows users to watch a video that is being downloaded. Available since Tribler 4.0, the video playback did not evolve much. The video player is based on VLC and offers support for seeking so the user can jump randomly to a specified offset in the video. Video downloads have a special Video On Demand (VOD) mode which means that the libtorrent library piece picking mechanism uses a linear policy. In this mode, pieces are downloaded in a timely matter. When the user seeks to a position in the video, the prioritization of the pieces are modified, giving priority to pieces around the chosen seek position. Users also have the possibility to use an external video player that support playback of HTTP video streams.\\\\

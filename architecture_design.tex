@@ -40,10 +40,48 @@ The next version of Tribler, version 4.0, got released in 2007\cite{tribler4tf}.
 \subsection{Tribler 5.x}
 The development of Tribler continued with the release of Tribler 5.0 in 2009\cite{historyoftribler}. The interface got a complete overhaul, introducing a more dark theme, which was replaced by a white theme a short while after the release. In the 5.x series, several improvements to Tribler itself and the user interface has been made. The focus of Tribler 5.0 has been on remote search and downloads. The thumbnails have been dropped and the search results are displayed in a paginated list instead.\\\\
 Tribler 5.1 contained some major improvements to the user interface, thanks to the feedback of the community. A new major addition have been added to Tribler 5.2: the concepts of channels, similar to YouTube, has been introduced. One goal of channels was to prevent spam inside the network by favouring content in more popular channels. The popularity indicator associated with each torrent got removed but has been placed back later. In Tribler 5.3, all custom widgets got replaced by native buttons, creating a more native feel on each platform. A tag cloud has been added to the home page of Tribler to help users determine which content they possibly want to look for. Moreover, the paginated list was replaced by a single, scrollable list of items. Tribler 5.4 introduced a magic search feature where similar search results are collapsed using text similarity functions and digit extraction. This leads to a much cleaner and comprehensive results list when searching.\\\\
-The final release in the 5.x series, Tribler 5.9, bought some major additions. The complete BuddyCast core has been rewritten, moving away from a TCP overlay to an implementation based on UDP, bringing huge benefits to the compatibility with NAT-firewalls. Also, \emph{libswift} has been introduced as the new download engine, providing download capabilities over UDP, removing the TCP layer from libtorrent.
+The final release in the 5.x series, Tribler 5.9, bought some major additions. The complete BuddyCast core has been rewritten, moving away from a TCP overlay to an implementation based on UDP, bringing huge benefits to the compatibility with NAT-firewalls. Also, \emph{libswift} has been introduced as the new download engine, providing download capabilities over UDP, removing the TCP layer from libtorrent.\\\\
+The architecture around the time of Tribler 5.5 is visible in Figure \ref{fig:tribler-core-architecture-55}. This quite complex architecture model is the result of gradually adding smaller components to Tribler that have been the product of research, such as \emph{2fast}, \emph{BuddyCast} and the \emph{Secure Overlay}. We notice several different threads that have to be synchronized, increasing the complexity of the code.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=1.0\columnwidth]{images/architecture/core_architecture_55}
+	\caption{The architecture of the Tribler core around Tribler 5.5.}
+	\label{fig:tribler-core-architecture-55}
+\end{figure}
 
 \section{Tribler 6.x}
 Shortly after the release of Tribler 5.9, Tribler 6.0 is released where a complete new user interface has been implemented. This version contained also some minor bug fixes that increased performance and usability. After the release of 6.0.1, several smaller releases (6.1, 6.2 and 6.3) were released. The focus shifted toward anonymous downloads and end-to-end encryption. These features were part of the Tribler 6.4 release, providing an experimental anonymous download mechanism and hidden seeding services. Moreover, the \emph{libswift} dependency got dropped since it was not stable enough. This release also introduced the Trivial File Transfer Protocol (TFTP), used to transfer torrent files between peers in Tribler. The next release, Tribler 6.4.1, contained some major security fixes after an external code review.
+
+\subsection{Dispersy}
+With the release of Tribler 6.1, Dispersy got introduced. Mainly developed by N. Zeilemaker and B. Schoon and described in \cite{zeilemaker2013dispersy}, Dispersy lies at the foundations of Tribler's messaging and synchronization system and is designed to deliver messages reliably in unpredictable networks. Moreover, it contains a Network Address Translator (NAT) traversal mechanism to improve connectability of peers in the network. Dispersy provides tools to quickly create overlay networks, called communities, that users can join and where they can disseminate messages. The available communities, together with a short description, is described in Table \ref{table:dispersy-communities}. Dispersy is available as submodule to the project. While being a major dependency of Tribler, a throughough analysis of Dispersy is considered outside the scope of this thesis.
+
+\begin{table}
+	\begin{tabularx}{\textwidth}{|l|X|}
+		\hline
+		\textbf{Community} & \textbf{Purpose} \\ \hline
+		\emph{AllChannel} & This community is used to discover new channels and to perform channel search queries.\\ \hline
+		\emph{BarterCast4} & While currently not enabled, this community is used to spread statistics about Tribler inside the network.\\ \hline
+		\emph{Channel} & This community represents a single channel and is responsible for managing torrents, playlists and moderations inside a channel.\\ \hline
+		\emph{Multichain} & The Multichain community utilizes blockchain technologies and can be regarded as the accountant mechanism that keeps track of shared and used bandwidth.\\ \hline
+		\emph{Search} & This community contains messages to perform remote keyword searches for torrents and torrent collecting operations.\\ \hline
+		\emph{HiddenTunnelCommunity} & The hidden tunnel community contains the Tor-like protocol that provides anonymity when downloading and contains the implementation of the hidden seeder services protocol used for anonymous seeding.\\ \hline
+	\end{tabularx}
+	\caption{An overview of implemented communities in Tribler as of July 2016.}
+	\label{table:dispersy-communities}
+\end{table}
+
+\subsection{Twisted}
+In 2014, it was decided to make significant changes to the architecture by utilizing Twisted, an event-driven networking engine written in Python. Twisted allows programmers to write code in an asynchronous way. At the heart of Twisted, we find the reactor. The reactor is the core of the event loop within Twisted – the loop which drives applications using Twisted\cite{twistedreactoroverview}. The event loop is a programming construct that waits for and dispatches events or messages in a program.
+The new threading model of Tribler 6 has been illustrated in Figure \ref{fig:old-threading-model}. In most Twisted applications, the reactor runs on the main thread of the Python application. In Tribler, the reactor runs on a separate thread since our main thread is occupied by the \emph{wxPython} main loop. User interface-related code such as refresh operations of lists, should always be executed on the Python main thread. Twisted operations however, should be scheduled on the reactor thread. The Twisted threadpool provides some additional threads to dispatch work to and can be used for longer-running operations that should not block the main or reactor thread. Several method decorators have been introduced to make thread switching much easier to implement. These decorators are also visible in Figure \ref{fig:old-threading-model}.\\\\
+Developers should be aware of the threading context when implementing new features. Long blocking calls on the main thread should be avoided as much as possible since they lead to an unresponsive user interface. Database calls however, should be scheduled on the reactor thread. While this reduced the number of threads if we compare to Figure \ref{fig:tribler-core-architecture-55} and makes our threading model somewhat easier, we are still stuck with a dedicated thread for the reactor.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=0.9\columnwidth]{images/architecture/threading_model_tribler}
+	\caption{The threading model in Tribler 6, together with the primitives to schedule operations on different threads.}
+	\label{fig:old-threading-model}
+\end{figure}
 
 \section{The roadmap of Tribler}
 In the previous Section, the evolution of Tribler has been evolved, up to the current architecture. We now turn our attention to the future of Tribler and propose a new architecture that will enable Tribler for another 10 year of research. The proposed architecture is visible in Figure \ref{fig:tribler7}. This architecture follows a layered approach with a clear distinction between the visible layers. This Section will discuss the proposed design and highlight decisions that have been made during the development process.
@@ -67,7 +105,6 @@ The trusted walker is located at the lowest layer of the architecture and is the
 
 The described mechanism will be replaced by a trusted walker that makes use of accumulated reputation in the Multichain, the accountant mechanism that keeps track of shared and used bandwidth, providing more reputation when a user provides bandwidth to help other users. The key idea is that sybil nodes, forged identities in the network, are ignored and not considered as a trusted peer since their reputation is low.\\\\
 New peers in that network that have not built any reputation yet, start out by creating some random interactions with other nodes, learning about the network and the reputation of other users. With an interval, every node runs an algorithm to calculate the reputation of known peers. The amount of uploaded data does not have to be the only factor of this reputation mechanism: the uptime of the user in question can also be considered, where a higher uptime might lead to a better reputation. This leads to a trust network where each node inside the network knows about other trusted peers.\\\\
-Peer discovery in this network 
 
 \subsection{Libtorrent and Content Discovery}
 Above the walker primitives explained in the previous Section, we find two components that are already present in the current system. The popular \emph{libtorrent} library is used to facilitate downloads. Libtorrent is written in C++, however interfaces for other programming languages such as Python, Go and Java are available. Libtorrent uses an alert mechanism to notify the program that is using the library about events in the library, such as download state transitions, peer discovery or completion of a metainfo lookup in the Distributed Hash Table (DHT). The current way of using \emph{libtorrent} in Tribler requires minimal changes to adhere to the proposed design, except for some optional refactoring and clean-up of the current code.\\\\

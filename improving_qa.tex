@@ -198,7 +198,7 @@ During development of the user interface, some issues that required some careful
 	\label{fig:importgraph-qt-gui}
 \end{figure}
 
-\subsubsection{\textbf{Displaying a huge amount of items}}
+\subsubsection{\textbf{Scalability of list items}}
 \emph{Qt} allows to display possibly many items in a simple list. The performance decreases dramatically if custom widgets are rendered in a list, like we are doing. Loading 1.000 of such list items takes several seconds\todo{verify this}. For each item in the list, the associated user interface file has to be loaded, parsed and rendered, possibly many times per second. Channels hold potentially several thousand of torrents which should be displayed in the user interface.\\\\
 This problem has been solved by using two techniques. The first one is lazy loading: by using a lazy-loading approach where more data is loaded when the user has scrolled through the end of the list, we can postpone and possibly avoid loading the whole list at once. This solution has also been implemented in the interface written in \emph{wxPython}. By loading only a subset of the list rows, the user experience can be significantly increased since users don't have to wait until the whole list of items is loaded. The implementation of this lazy-loading solution is reusable and can be found in the \emph{lazyloadlist.py} source file. This however, still resulted in a minor period of waiting when the next set of items is being loaded. It turned out that loading the interface definition file every time is a time-consuming operation. The implemented solution to reduce this processing time is to pre-load the interface definition as soon the user interface starts. This has only a minor effect on the total startup time\todo{hoeveel?}.
 
@@ -206,17 +206,15 @@ This problem has been solved by using two techniques. The first one is lazy load
 The old user interface made use of the VLC library for the implementation of the embedded video player. This embedded video player did not function on OS X due to incompatibilities with the wx library used for the implementation of the old interface.
 
 \section{Improvements to the threading model and performance}
-The work as described in the last two sections, has led to a better and stable threading model. The complex threading model as used by Tribler 6 is vulnerable for bad code practices, leading to confusion and race conditions. The old threading model is visible in Figure \ref{fig:old-threading-model}. In most Twisted applications, the reactor runs on the main thread of the Python application. In Tribler, the reactor runs on a separate thread since our main thread is occupied by the \emph{wxPython} main loop. User interface-related code such as refresh operations of lists, should always be executed on the Python main thread. Twisted operations however, should be scheduled on the reactor thread. The Twisted threadpool provides some additional threads to dispatch work to and can be used for longer-running operations that should not block the main or reactor thread. Several method decorators have been introduced to make thread switching much easier to implement. These decorators are also visible in Figure \ref{fig:old-threading-model}.\\
+The work as described in the last two sections, has led to a better and stable threading model. The complex threading model as used by Tribler 6 is vulnerable for bad code practices, leading to confusion and race conditions.\\\\
+Developing the new user interface came with an additional advantage. Now that the user interface runs in a separate process, we have the opportunity to run the reactor on the main thread. This allows us to get rid of the confusing decorators since we only have one thread (besides the threadpool) to schedule calls on. Getting rid of the abundant thread switching should increase performance since we avoid overhead introduced by the context switch. The new threading model is visible in Figure \ref{fig:new-threading-model}.
 
 \begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.9\columnwidth]{images/improving_qa/threading_model_tribler}
-	\caption{The threading model in Tribler 6, together with the primitives to schedule operations on different threads.}
-	\label{fig:old-threading-model}
+	\includegraphics[width=0.7\columnwidth]{images/improving_qa/new_threading_model_tribler}
+	\caption{The new, simplified threading model in Tribler 7, together with the primitives to schedule operations on the threadpool.}
+	\label{fig:new-threading-model}
 \end{figure}
-
-Developers should be aware of the threading context when implementing new features. Long blocking calls on the main thread should be avoided as much as possible since they lead to an unresponsive user interface. Database calls however, should be scheduled on the reactor thread. This threading model leads to much unnecessary confusion and is prone to errors.\\\\
-Developing the new user interface came with an additional advantage. Now that the user interface runs in a separate process, we have the opportunity to run the reactor on the main thread. This allows us to get rid of the confusing decorators since we only have one thread (besides the threadpool) to schedule calls on. Getting rid of the abundant thread switching should increase performance since we avoid overhead introduced by the context switch.
 
 \section{Improving Sofware Artifacts}
 During the last ten years of development on Tribler, the main focus of the project has been to deliver working code. The project had a severe lack of maintained software artifacts, including documentation, comments and architectural diagrams. Most of the conducted research was documented on the Tribler wiki\footnote{https://www.tribler.org/TitleIndex/}, however, this wiki is very outdated and not maintained anymore. After the migration of the project to GitHub, this platform was favoured over continued usage of the Tribler wiki archive.\\\\
