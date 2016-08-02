@@ -1,0 +1,20 @@
+\chapter{Gumby scenario file commands}
+As described in Chapter \ref{chapter:experiments}, a standalone Tribler runner that uses a scenario file has been created. The scenario file allows developers to specify commands at specific points in time after Tribler has booted. This Appendix describes the implemented commands and usage.
+
+\begin{table}[h!]
+	\begin{tabularx}{\textwidth}{|X|X|X|}
+		\hline
+		\textbf{Command} & \textbf{Argument(s)} & \textbf{Description}\\ \hline
+		\emph{start\_session} & - & Start a Tribler session.\\ \hline
+		\emph{stop\_session} & - & Stop a running Tribler session.\\ \hline
+		\emph{stop} & - & Stop the experiment and write the gathered statistics.\\ \hline
+		\emph{clean\_state\_dir} & - & Clean the default state directory of Tribler.\\ \hline
+		\emph{search\_torrent} & The search query and optionally the minimum number of peers required in before the search is performed. & Perform a remote torrent search.\\ \hline
+		\emph{local\_search\_torrent} & The search query. & Perform a local torrent search in the database.\\ \hline
+		\emph{get\_metainfo} & The infohash of the torrent to be fetched. & Fetch meta info of a specified torrent from the DHT.\\ \hline
+		\emph{start\_download} & The URI of the download. & Start a download from a torrent specified by a given URI.\\ \hline
+		\emph{subscribe} & The Dispersy channel identifier of the channel (can also be \emph{random}). & Subscribe to a random or specified channel.\\ \hline
+	\end{tabularx}
+	\caption{An overview of commands for the Gumby scenario file when performing experiments with Tribler.}
+	\label{table:gumby-scenario-file}
+\end{table}
