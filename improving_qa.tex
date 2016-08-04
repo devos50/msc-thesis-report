@@ -1,6 +1,6 @@
 \chapter{Improving Software Metrics and Refactoring}
 \label{chapter:refactoring}
-In Chapter \ref{chapter:problem-description}, the huge accumulated amount of technical debt in the system has been highlighted. A new robust and future-proof architecture has been proposed in Section \ref{chapter:architecture}. In this Chapter, the most important activities during the span of this thesis work will be presented. This includes a developer-friendly REST API and, a modern, simplistic and user-friendly grahical user interface, major important modifications to the available testing framework and refactoring of several components that can be found in Tribler. A summary of the refactoring efforts conducted is displayed in Table \ref{table:refactoring-summary}.\\\\
+In Chapter \ref{chapter:problem-description}, the high amount of technical debt Tribler has accumulated over the past decade has been highlighted. We presented a history of architectural evolution and proposed a new robust and future-proof architecture in Chapter \ref{chapter:architecture}. Now, we will start working on this architecture and the most impacting activities performed to improve the system during the span of this thesis work will be presented in this Chapter. This includes a accessible REST API, a modern, simplistic user interface, major modifications to the available testing framework and refactoring of several components present in Tribler. A summary of the re-engineering efforts conducted is displayed in Table \ref{table:refactoring-summary}.\\\\
 
 \begin{table}[h!]
 	\centering
@@ -11,34 +11,61 @@ In Chapter \ref{chapter:problem-description}, the huge accumulated amount of tec
 		\textbf{Lines deleted (without GUI)} & 12.581 \\ \hline
 		\textbf{Lines deleted (with GUI)} & 25.010 \\ \hline
 	\end{tabular}
+	\caption{A summary of refactoring efforts as conducted during this thesis work.}
 	\label{table:refactoring-summary}
-	\caption{A summary of refactoring efforts as conducted during this thesis.}
 \end{table}
 
-\section{Improving tests and testability}
-The most fundamental way to verify the correctness of software detect issues as soon as possible in the development cycles, is by having an exhaustive test suite. As described in Chapter \ref{chapter:problem-description}, the current test suite is plagued with unstable and non-functional tests. This section will discuss the performed work to strengthen and stabilize the test suite.
+\section{Software Aging}
+We start the discussing with introducing and discussing the term \emph{software aging}, which is relevant to Tribler in a sense that the system has symptoms of aging. Software aging is a serious problem in a society that is dependent on all kinds of software. The term has been coined by Dave Parnas in his talk about software aging in 1994\cite{parnas1994software}. He points out two major reasons why software aging is a problem. The first reason is the lack of movement when software fails to meet the requirements of an always-changing environment: software that users perceived as state-of-the-art several decades ago, might now be considered as legacy software.\\\\
+The second reason is in particular interesting since we think this is one of the most important reasons why Tribler has evolved to the complex, hard-to-understand architecture it is today and Parnas references to this phenomena as \emph{ignorant surgery}. Changes made by people who do not understand the original design concept almost always cause the structure of the program to degrade. This is especially true for the development process of Tribler which had many contributors who are making changes to specific parts of the architecture, often not knowing the design concepts of the original authors of the code. Moreover, some developers might not be satisfied with the implemented design and decide to change the architecture to suit their own needs.\\\\
+Some of the consequences of aged software are reduced performance, decreased reliability and a system that does not function correctly in a modern environment\todo{afmaken}.
 
-\subsection{Identifying Code Smells}
-As described in the work of van Deursen et al\cite{van2001refactoring}, there is a difference between refactoring test code and production code in a sense that test code often has a characteristic set of code smells, originating from the way the tests are structured. Before we start to make major modifications to the test suite, we present a list of code smells identified in the test suite of Tribler. This list is visible in Table \ref{table:tests-code-smells}.
+\section{Influences of Python on software metrics}
+Tribler is written in: Python, an accessible, easy-to-learn language that is widely used in scientific applications. It is a high-level language, allowing one to express complex constructs with only a few lines of code. One of the most distinguishable properties of the language is that it is dynamically typed, which means that the type of a variable is not known at compile-time. This is in contrast to static typing, where this type is known to the compiler. The dynamic nature of the language has consequences on the way programmers are writing there code. A dangerous pitfall is that developers could make wrong assumptions about types of variables, leading to bugs that are only visible on runtime. Even then, it is not guaranteed that these kind of errors reveal themselves since they might be located inside a branch that is entered in a small amount of the application executions.\\\\
+Dynamic typing also influences generated software metrics. While import graphs might give a good indicator of dependencies, they do not tell the whole story. In fact, there might be dependencies that are not visible in a generated import graph. These 'hidden' dependencies are often made between classes using \emph{dependency injection} (DI), a technique to not denote dependencies in the source code\todo{beter uitleggen}. Dynamic typing makes it even harder to capture such dependencies since hardly any information about types of attributes within a class can be determined at compile-time, especially not when dependencies are passed through getters or the constructor of a particular class\todo{afmaken}.
+
+\section{Improving the test suite}
+The most fundamental way to verify the correctness of software and to detect issues as soon as possible in the development cycles, is by having an well-designed and stable test suite. As pointed out in Chapter \ref{chapter:problem-description}, the current test suite is plagued with unstable and non-functional tests. We will discuss the performed work to strengthen and stabilize the test suite in this Section. A summary of improvements made during this thesis is presented in Table \ref{table:test-suite-improvements}.
+
+\begin{table}
+	\centering
+	\begin{tabular}{ l | l | l | }
+		\cline{2-3} & \textbf{November '15} & \textbf{July '16}\\ \hline
+		\multicolumn{1}{ |l| }{Number of unit tests} & x & x \\ \hline
+		\multicolumn{1}{ |l| }{Number of assertions} & x & x \\ \hline
+		\multicolumn{1}{ |l| }{Number of failed runs after 10 runs} & x & x \\ \hline
+		\multicolumn{1}{ |l| }{TLC/PLC ratio} & x & x \\ \hline
+		\multicolumn{1}{ |l| }{Total Linux test duration on Jenkins} & x & x \\ \hline
+		\multicolumn{1}{ |l| }{Average execution time per test} & x & x \\ \hline
+	\end{tabular}
+	\caption{A summary of improvements to the test suite between November '15 and July '16.}
+	\label{table:test-suite-improvements}
+\end{table}
+
+\subsection{Identifying code smells in the tests}
+As described in the work of van Deursen et al\cite{van2001refactoring}, there is a difference between refactoring test and production code in a sense that test code often has a characteristic set of code smells, originating from the way tests are structured. Before we start to make major modifications to the test suite, we present a list of code smells identified after a manual code review in the test suite of Tribler. This list is displayed in Table \ref{table:tests-code-smells} where for each code smell, we describe it and propose a solution.\\
 
 \begin{table}
 	\begin{tabularx}{\textwidth}{|X|X|X|}
 		\hline
 		\textbf{Code smell} & \textbf{Description} & \textbf{Solution}\\ \hline
-		Dependency on external resources & Various tests are using external resources, leading to unpredictable and unstable tests. & Remove the dependency on the resource or make sure that the resource is locally available. \\ \hline
-		State leak & The state of a previous executed test is leaking to the next test, mostly notable due to delayed calls left in the Twisted reactor. & Make sure that any delayed call in the reactor is removed when shutting down Tribler. \\ \hline
-		Too much responsibility & Many tests have multiple responsibilities, testing both parts of the user interface and core components in Tribler. & Make sure that each test is only testing one unit in the system and design separate tests for the user interface.\\ \hline
-		Slow tests & There are some slow tests (tests that are taking over 30 seconds to complete). This can be an indicator that the test is testing too much & Identify what is making the test slow and make the test as small as possible. \\ \hline
-		Unclear assertions & Tests that have multiple assertions often do not annotate their assertion well with a clear and meaningful description & Add an explanation if an assertion fails.\\ \hline
-		Dependency on a Tribler session & Some tests are starting a complete Tribler session while only a small subset of the system is tested & Use mocking techniques to inject a mocked session or refactor the component so no session is required. \\ \hline
-		Resource writing to the source directory & Various tests are writing resources to the source code directory. They might accidentally end up in the VCS if developers are not cautious. & Temporary resources produced by tests should be written to a temporary directory that is correctly cleaned after test execution. \\ \hline
-		Claiming the same local port & Some tests that are running in parallel are claiming the same local port, leading to test failures. & Reserve port ranges to individual parallel test runs. \\ \hline
-		Timing issues & Various tests are checking a condition after a fixed interval. This interval is often based on intuition rather than empirical data. This is particularly dangerous when the test is dependent on external resources. & Refactor the test so the condition check is no longer necessary.\\ \hline
-		No usage of comments & There are no comments, explaining what the the tests are testing and what the expected output is. & Comments should be added with a description of the test. \\ \hline
+		Dependencies on external resources & Various tests are using external resources, leading to unpredictable and unstable tests. & Remove the dependency on the resource or make sure that the resource is locally available (see Chapter \ref{subsec:external-network-resources}). \\ \hline
+		State leak & The state of a previous executed test is leaking to the next test, mostly notable due to delayed calls left in the Twisted reactor after shut down. & Make sure that any delayed call in the reactor is removed when shutting down Tribler. \\ \hline
+		Too much responsibility & Many tests have multiple responsibilities, testing both parts of the user interface and core components in Tribler. & Make sure that each test is only verifying one unit in the system. Also implement a separate test suite for the user interface.\\ \hline
+		Tests with a high runtime & There are some tests that are taking long to complete (sometimes over 30 seconds). This can be an indicator that the test has too much responsibilities. & Identify why the test takes long to complete and shorten the runtime i.e. by splitting the larger test in smaller tests. \\ \hline
+		Unclear assertions & Tests that have multiple assertions often do not annotate their assertion well with a clear and meaningful description & Add an annotation with the cause of the failure if an assertion fails so developers can pinpoint the problem quicker.\\ \hline
+		Dependency on a Tribler session & Some tests are starting a complete Tribler session while only a small subset of the system is tested & Use mocking techniques to inject a mocked session or refactor the component so no session is required to test the component. \\ \hline
+		Resource writing to the source code directory & Various tests are writing resources to the source code directory. They might accidentally end up in the VCS if developers are not noticing these files. & Temporary resources produced by tests should always be written to a temporary directory that is cleaned after test execution. \\ \hline
+		Claiming the same local network port & Some tests that are running in parallel are claiming the same local network port, leading to test failures. & Reserve port ranges to individual parallel test runs or try to avoid the allocation of local ports. \\ \hline
+		Timing issues & Various tests are asserting a condition after a fixed time interval. This interval is often based on intuition rather than empirical data. This is particularly dangerous when the test is dependent on external resources. & Refactor the test so the condition check is no longer necessary.\\ \hline
+		No usage of comments & There are no comments, explaining what the the tests are testing and what the expected output is. & Comments should be added that explains the purpose of the test together with the expected in- and output. \\ \hline
+		No directory structure in the test package & There is no directory structure and almost all tests are located inside the same directory. & Restructure the tests package and organise tests in different, logical named directories.\\ \hline
 	\end{tabularx}
 	\caption{Identified code smells in the test suite of Tribler as of November '15.}
 	\label{table:tests-code-smells}
 \end{table}
+
+Table \ref{table:tests-code-smells} has been used as reference during the refactoring efforts of the test suite and in this thesis work, we fixed various of the outlined code smells. Dependencies on external resources have been reduced to a minimum as explained in Subsection \ref{subsec:external-network-resources}. The efforts on increasing the stability of the tests is outlined in Subsection \ref{subsec:instability-tests}. During the refactoring process of tests, we placed clear assertions, added comments and got rid of managing Tribler sessions as much as possible.
 
 \subsection{Improving Code Coverage}
 Code coverage is defined as the percentage of source code that is covered by at least one test in the test suite. Our continuous integration environment offers tools to track the code coverage over time. After each automated test suite execution a comprehensive report with detailed information about the code coverage is generated. The reported metrics by this report are not accurate enough since some third-party libraries are included in the coverage report, such as the VLC bindings and \emph{pymdht}, a library to fetch peers from the Distributed Hash Table (DHT). Also, the code coverage of Dispersy is included in these reports while we consider Dispersy as a separate engineering project.\\\\
@@ -65,7 +92,7 @@ Improving the code coverage has been done by writing small unit tests where we a
 \begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.8\columnwidth]{images/improving_qa/test_trend}
-	\caption{The number of tests over time.}
+	\caption{The number of tests over time where November 2015 is annotated.}
 	\label{fig:importgraph-qt-gui}
 \end{figure}
 
@@ -98,11 +125,13 @@ def test_home_page_channels(self):
 \end{lstlisting}
 
 \subsection{External Network Resources}
+\label{subsec:external-network-resources}
 On of the problems with the test suite was that dependencies on external network resources should either be removed or one should verify that the resources are under the control of the developer and always available. The test suite contains various tests where external torrent files are fetched from the internet, in particular, from the Ubuntu repository. While this repository can guarantee high availability, any downtime in this external resource can lead to failing tests. The implemented solution for this design flaw is to start up a local HTTP server that serves the torrent file. While this approach requires more code to manage this local server, it completely removes the dependency on the Ubuntu repository.\\\\
 The same solution has been applied to solve the dependency on external seeders. A small number of tests makes assumptions on the availability of torrent pieces of the network. This certainly makes tests fail if the executing machines has a bad or even no internet connection. The process of setting up a local seeder session is straightforward. Again, this approach requires code to properly start and shut down the seeder session. The implementation is reusable to an extend that developers of tests can reuse the implemented solutions with only a few lines of code.\\\\
 Unfortunately, there are some external network dependencies left which are considered harder to refactor. A handful of tests are performing a remote keyword search, requiring various communities in Dispersy to be loaded. These tests are dependent on available peers in the respective community in order to make sure there are incoming search results. The proposed solution here is to start various dedicated Dispersy sessions on the local machine. Due to time constraints, the implementation of this solution is considered future work.
 
 \subsection{Instability of Tests}
+\label{subsec:instability-tests}
 Well-designed tests should only fail if some new code is breaking existing functionality. If no changes are presents, the tests should always succeed. Reducing dependencies on external network is not sufficient to guarantee this in Tribler. The structural problem of the tests is that the system is infested with race conditions. Race conditions can be invisible since they often occur in a very specific runtime setting of the system, making the debugging process of these kind of errors frustrating.\\\\
 During this thesis, many race conditions have been detected and solved. One interesting observation is that some issues only occurred on a specific platform. We believe can be explained by differences in the implementation of underlying threading model across operating systems. The most common cause of failing tests can be addressed to delayed calls in the Twisted reactor. During the test execution, Tribler is restarted many times. If a developer leaves by accident a delayed call behind when the shut down procedure has been completed, this delayed call might be executed in the wrong Tribler session, possibly leading to an inconsistent state of the system. Making sure the reactor is completely clean is not straightforward: if one is not aware of scheduled calls in the system, the mistake is easily made.\\\\
 Writing stable tests also requires the test to be limited in what they do. Each test should only be focussed on the specific part of the system that has to be tested\todo{cite?}. While often unnecessary, a significant amount of the available tests are focused on starting a complete Tribler session, testing a small subset of the system, and shutting down Tribler again. While this approach is relatively easy to code, starting a fully-fledged session often leads to more instability and unexpected side-effects during test execution. Instead, only the classes to be tested should be instantiated and any dependencies this class have, should be mocked. Mocking ensures that developers have control over dependencies, allowing them to specify any expected return value. Moreover, the execution time of these small unit tests is significantly lower than the tests where a Tribler session is managed. The additional unit tests that have been written during this thesis, are following the described design.
@@ -123,129 +152,11 @@ In parallel with the \emph{AllChannel} experiment, we can package Tribler for di
 	\label{fig:jenkins-pipeline}
 \end{figure}
 
-\section{REST API}
-As described in Chapter \ref{chapter:architecture}, communication between the graphical user interface and the Tribler core is facilitated using a REST API. This Section explains the implementation of the API in more detail.\\\\
-The REST API is written using Twisted. While there are plenty of Python libraries available that allow developers to facilitating a web server in their application, Twisted is used since it already represents a big part of the internal structure of Tribler. With the possibility to integrate the REST API into the main application flow, we avoid having to create special constructions to run the API for instance on a separate thread. API endpoints in Twisted are represented as a resource tree. This is in accordance with REST where the URL of the request can be treated like a path in the resource tree. This structure is also visible to some extent in the import graph of the API module as displayed in Figure \ref{fig:importgraph-api}. We will highlight and discuss some important files in the API module:
-\begin{itemize}
-	\item \emph{rest\_manager}: the \emph{rest\_manager} file contains the \emph{RESTManager} class which is responsible for starting and stopping the API. In addition, this file contains the \emph{RESTRequest} class which is a subclass of \emph{server.Request} (which in turn is instantiated by Twisted on an incoming request) and handles any exceptions that occurred during the serving of the HTTP request.
-	\item \emph{root\_endpoint}: this file hosts the \emph{RootEndpoint} class which represents the root node of our resource tree. This class dispatches incoming requests to the right sub nodes in the tree.
-	\item \emph{util}: the \emph{util} file contains various helper functions, such as conversion utilities to easily transform channel and torrent data from the database into JSON format that can be sent to the client that initiated a request.
-\end{itemize}
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=1.0\columnwidth]{images/improving_qa/importgraph_api}
-	\caption{The import graph of the REST API module.}
-	\label{fig:importgraph-api}
-\end{figure}
-
-Except for some endpoints, all data returned by the API is structured in JSON format. The JSON format is well adopted in the field of web engineering and easy to parse. Most of the endpoints are straightforward implementations where the client performs a request and some data is returned. There are situations where the client does a request and a stream of data should be returned. For instance, this is the case when the user performs a search query. Sometimes, data should be returned to the client, even if the client did not ask for this data. When a crash in the Tribler core code occurred, the client should be notified of this crash and possibly warn the user that he or she should restart the application. For this purpose, an asynchronous events stream has been designed and created. Clients can open this event stream and interesting notifications are sent over this stream. All messages that are sent over the \emph{events} connection are shown in Table \ref{table:rest-api-events}.\\
-
-\begin{table}
-\begin{tabularx}{\textwidth}{|l|X|}
-	\hline
-	\textbf{Event name} & \textbf{Description} \\ \hline
-	\emph{events\_start} & The events connection is opened and the server is ready to send events.  \\ \hline
-	\emph{search\_result\_channel} & Tribler received a channel search result (either remote or locally). The event contains the channel result data. \\ \hline
-	\emph{search\_result\_torrent} & Tribler received a torrent search result (either remote or locally). The event contains the torrent result data. \\ \hline
-	\emph{upgrader\_started} & The Tribler upgrader started. \\ \hline
-	\emph{upgrader\_tick} & The status of the Tribler upgrader changed. This event contains a human-readable string with the status update. \\ \hline
-	\emph{upgrader\_finished} & The Tribler upgrader finished. \\ \hline
-	\emph{watch\_folder\_corrupt\_torrent} & The watch folder module has encountered a corrupt .torrent file. The name of the file is part of this emitted event.\\ \hline
-	\emph{new\_version\_available} & A new version of Tribler is available. The version number is contained in the event.\\ \hline
-	\emph{tribler\_started} & Tribler has completed the startup procedure and is ready to serve HTTP requests on all endpoints.\\ \hline
-	\emph{channel\_discovered} & A new channel has been discovered. The events contains the discovered channel data.\\ \hline
-	\emph{torrent\_discovered} & A new torrent has been discovered. The events contains the discovered torrent data.\\ \hline
-\end{tabularx}
-\caption{An overview of all events that are passed over the asynchronous events connection, part of the REST API.}
-\label{table:rest-api-events}
-\end{table}
-
-The API is started in two stages. Just before starting Tribler, the \emph{events} connection is activated. This connection is initialized earlier so we can send interesting updates of the upgrader to the client. When the upgrader is completed and Tribler has been started, the other endpoints are activated and the API is ready to be used.
-
-\section{Graphical User Interface}
-The amount of accumulated technical debt in the current graphical user interface of Tribler is devastating. After going through several development cycles where some impacting changes have been made, the code base of the user interface has reached the point where it is more beneficial to create a complete new user interface. This section will continue the discussion that has been initiated in Section \ref{chapter:problem-description}. First, the structure of the current user interface will be described. Next, the new interface, introduced in Chapter \ref{chapter:architecture} will be elaborated. Encountered design decisions and challenges are presented and discussed.
-
-\subsection{The current user interface}
-\todo{Better title} The current user interface is unintuitive and cluttered with widgets and many functionality that should be in the core module of Tribler, can be found at higher levels in the user interface code. There is actually no clear separation between the core and the user interface, making it hard for developers to develop and test new functionalities since they have to deal with a bigger code base. One of the goals of this thesis is to make this separation more explicit for developers so they do not have to touch interface-related code if they are not interested in that.\\\\
-The code base of the user interface is full of undesired workarounds and code smells. There is no clear, documented structure to be identified throughout the code and there are several reasons for this issue. One of the underlying causes is the mindset of developers that the user interface code base is subordinate to the code related to the core functionalities of Tribler. While it is often true that minor defects in the user interface are less critical than errors in important core functionalities such as the download engine, developer should always strive to write maintainable code. The fact that the user interface has undergone dramatic changes throughout the 10 years of research is an additional reason that led to this unstructured code base. Making short-term decisions were clearly favoured over decisions that benefit the longer-term development process.\\\\
-If we take a closer look at the structure of the user interface code base, several files with many class definitions can be found. In the \emph{widgets.py} file, we can identify 30 distinct widget definitions. The \emph{SearchGridManager} file acts like the glue between the Tribler core and the user interface. Most of the requests to the core are passing through method definitions inside this file.
-
-\subsection{Building a new user interface}
-Before starting to create a new user interface, we should first decide which graphical user interface library we would like to use. There are plenty of libraries that are suited for this job. Below, several of such libraries are summarized, together with a small description and some (dis)advantages.
-\begin{itemize}
-	\item \emph{wxPython}: this is the current user interface library we are using. \emph{wxPython} is built upon \emph{wxWidgets} and provides the Python bindings to this latter library. The library is cross-platform and we can continue to use \emph{wxPython}. We already have a large code base written in \emph{wxPython} so continued usage of this library could allow us to reuse several widgets. The main disadvantages of this library are the minor inconsistencies across different platforms and the lack of a visual designer, requiring us to specify the complete layout in Python code.
-	\item \emph{Kivy}: the cross-platform library Kivy has been used by Tribler research, particularly in the past attempts to run Tribler on Android\cite{de2014android}\cite{sabee2014tribler}. The decision of using Kivy for the new user interface enables us to reuse the interface logic on Android. The layout of Kivy can either be created in \emph{.kv} files or specified in code which is based on the separation of concerns principle. While not as old as \emph{wxPython} or \emph{pyQt}, the library has gained significant attention and adoption in the Python community.
-	\item \emph{TKinder}: the \emph{TKinder} library is a layer built upon the Tcl/Tk framework and is considered the de-facto graphical user interface library for Python. Like the other discussed frameworks, \emph{TKinder} does not provide a visual designer. The library is built-in in Python which means that no additional libraries have to be installed in order to start writing code. \emph{TKinder} however is considered more suitable for simple applications due to the simplistic nature of the library.
-	\item \emph{PyQt}: \emph{PyQt} provides the Python bindings for the Qt framework and is widely used in open-source and commercial applications. With a first version released in 1995, the Qt framework has evolved into a mature state. The library is very well documentation and provides many different addons and plugins to support a wide range of applications. One of these plugins is a visual WYSIWYG designer where the layout of an interface can be specified in a drag-and-drop manner. This generates a \emph{xml} file which can be read and parsed by \emph{Qt}. Visual styles can be specified using the  \emph{Cascading Style Sheet} (CSS) language. The documentation of \emph{Qt} is very comprehensive, although the documentation regarding \emph{PyQt} is somewhat less maintained.
-\end{itemize}
-Since the graphical user interface will be an important aspect of Tribler, we wish to use a library that is future-proof, well-maintained and easy to use. We think that in the context of this thesis, choosing \emph{PyQt} is the best choice to build a new user interface. The fact that we can specify our layout using an editor is an enormous advantage since this will mean that we have less code to contribute. In addition, this allows other developers that are not familiar with the Tribler code base to contribute to the graphical user interface. The \emph{Qt} visual designer also offers tools for internationalization and translation of the interface in foreign languages. Tasks like these are perfect opportunities for contributions in an open source project and can potentially attract new developers. A screenshot of the used visualizer is visible in Figure x.\\\\
-The result of the development of the new interface is displayed in Figure \ref{fig:new-gui-1}. Our vision during development of this interface is that in essence, it should only display data and do as few processing of the data as possible. The majority of the new user interface has been built using the visual designer. Some code has been written to handle requests to the Tribler core, display the right data in lists and to manage interface-related settings. Connections between widgets and Python code are made using the signal-slot mechanism in \emph{Qt}. This mechanism is used for communication between objects and is a central feature in the \emph{Qt} framework. Widgets in \emph{Qt} can have signals, events they want to possibly notify to other widgets. Some widgets have some built-in signals, i.e. a button emits a \emph{clicked} signal if the user clicks the button with the mouse. Other widgets or Python objects can subscribe to these signals. These signals and slots can either be specified using code or the visual designer, however, to keep the amount of Python code to be maintained to a minimum, we decided to specify our widgets connections in the visual designer as much as possible.\\
-
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=0.8\columnwidth]{images/improving_qa/newgui1}
-	\caption{The home page of the new user interface.}
-	\label{fig:new-gui-1}
-\end{figure}
-
-During development of the user interface, some issues that required some careful analysis were encountered. The remained of the Section will describe these issues in more detail.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=1.0\columnwidth]{images/improving_qa/importgraph_new_gui}
-	\caption{The generated import graph of the code base related to the new user interface.}
-	\label{fig:importgraph-qt-gui}
-\end{figure}
-
-\subsubsection{\textbf{Scalability of list items}}
-\emph{Qt} allows to display possibly many items in a simple list. The performance decreases dramatically if custom widgets are rendered in a list, like we are doing. Loading 1.000 of such list items takes several seconds\todo{verify this}. For each item in the list, the associated user interface file has to be loaded, parsed and rendered, possibly many times per second. Channels hold potentially several thousand of torrents which should be displayed in the user interface.\\\\
-This problem has been solved by using two techniques. The first one is lazy loading: by using a lazy-loading approach where more data is loaded when the user has scrolled through the end of the list, we can postpone and possibly avoid loading the whole list at once. This solution has also been implemented in the interface written in \emph{wxPython}. By loading only a subset of the list rows, the user experience can be significantly increased since users don't have to wait until the whole list of items is loaded. The implementation of this lazy-loading solution is reusable and can be found in the \emph{lazyloadlist.py} source file. This however, still resulted in a minor period of waiting when the next set of items is being loaded. It turned out that loading the interface definition file every time is a time-consuming operation. The implemented solution to reduce this processing time is to pre-load the interface definition as soon the user interface starts. This has only a minor effect on the total startup time\todo{hoeveel?}.
-
-\subsubsection{\textbf{A working VLC on multiple platform}}
-The old user interface made use of the VLC library for the implementation of the embedded video player. This embedded video player did not function on OS X due to incompatibilities with the wx library used for the implementation of the old interface\todo{more}.
-
-\section{Improvements to the threading model and performance}
-The work as described in the last two sections, has led to a better and stable threading model. The complex threading model as used by Tribler 6 is vulnerable for bad code practices, leading to confusion and race conditions.\\\\
-Developing the new user interface came with an additional advantage. Now that the user interface runs in a separate process, we have the opportunity to run the reactor on the main thread. This allows us to get rid of the confusing decorators since we only have one thread (besides the threadpool) to schedule calls on. Getting rid of the abundant thread switching should increase performance since we avoid overhead introduced by the context switch. The new threading model is visible in Figure \ref{fig:new-threading-model}.
-
-\begin{figure}[h!]
-	\centering
-	\includegraphics[width=0.7\columnwidth]{images/improving_qa/new_threading_model_tribler}
-	\caption{The new, simplified threading model in Tribler 7, together with the primitives to schedule operations on the threadpool.}
-	\label{fig:new-threading-model}
-\end{figure}
-
-\section{Relevance ranking algorithm}
-\label{sec:relevance-ranking-algorithm}
-Serving users relevant information as fast as possible is important in Tribler. When users are performing a search in the user interface, the returned search results are sorted according to a relevance ranking algorithm that considers several factors of the search results. A key problem of this algorithm is that the implementation is located inside the code base associated with the user interface. Essentially, sorting search results can be considered a task of the Tribler core. Moving the algorithm to the core module seems to be a adequate solution but this requires us to understand the old relevance ranking rules so we can reimplement the algorithm in the core module. Unfortunately, the code that is responsible for the relevance ranking lacks proper documentation and is hard to read and understand. Moreover, the code it split between several classes, making it harder to understand its behaviour.
-
-\subsection{Old ranking algorithm}
-Sorting of channels and torrents are both using a different algorithm. Channels are sorted on the number of torrents where channels that have a higher number of torrents, are displayed higher in the list. The algorithm to sort torrents on relevance is more complex and uses five different scores. These scores are determined as follows (ordered on importance):
-\begin{enumerate}
-	\item The number of matching keywords in the name of the torrent. Keywords are determined by splitting the name of a torrent on non-alphabetical characters and common keywords such as \emph{the} are filtered out.
-	\item The position of the lowest matching keyword in the torrent name. For instance, when searching for \emph{One} and there is a torrent result named \emph{Pioneer-One-S01E03.avi}, the position of the lowest matching keyword is 2, since \emph{Pioneer} is not present in the search query.
-	\item The number of matching keywords in the file names that the torrent contains.
-	\item The number of matching keywords in the extension of the files (for instance, \emph{avi}, \emph{iso} etc).
-	\item A score that is based on several (normalised) attributes of the torrent. This score is determined after the set of local search results are constructed. The following formula is used: $ s = 0.8 * n_s - 0.1 * n_{vn} + 0.1 * n_{vp} $ where $ s $ is our score, $ n_s $ denotes the number of seeders, $ n_{vn} $ the number of negatives votes of this torrent and $ n_{vp} $ the amount of positive votes of this torrent. The number of positive and negative votes do not exist any more and as a consequence will always be 0, making this score only dependent on the number of seeders\todo{explain normalization}.
-\end{enumerate}
-For each torrent, the set of five scores as described above is determined. The comparison between two torrents now proceeds based on these five determined scores, starting with the first score, proceeding to the next score in case when two scores are equal.\\\\
-Finally, the list is prepared and a channel result is inserted between every five torrent items in the list. This is done since usually, the amount of torrents is much bigger than the amount of channels. Not only channels matching the search query are displayed: for each torrent, the most popular channel that contains this specific torrent, is determined and also considered in the list of results.\\\\
-While the algorithm as described above takes many factors in consideration, we detected some problems and possible improvements:
-\begin{itemize}
-	\item One of the main problem is that the amount of matches inside a torrent name/torrent file name is not taken into consideration. For instance, when searching for \emph{Pioneer One}, a torrent named \emph{Pioneer One Collection} probably has a higher relevance than a torrent named \emph{Pioneer One - Episode 3, Season 4} since the matching in the first case is considered better.
-	\item The relevance sorting of channels in the result set is only dependent on the number of torrents in that channel. The number of matching terms in the channel name and description is not even considered.
-	\item When building the inverted index in the SQLite database for the full text search, duplicate words are removed. This means that when we search for \emph{years}, a torrent named \emph{best years} will be ranked equal to a torrent named \emph{years and years} (if we only consider a ranking based on the torrent name). However, the torrent named \emph{years and years} should be assigned a higher relevance since the keyword \emph{years} occurs twice in the latter example. Another example is when searching for \emph{iso}. A torrent file that contains 100 \emph{iso} files is currently ranked equivalent to a torrent file that only has one \emph{iso} file.
-	\item The current relevance ranking algorithm only returns results that matches all given keywords. So when searching for \emph{pirate audio}, only torrents are returned that are matching on both terms. It might be better to show the user also torrents matching 'pirate' and matching 'audio' (while still giving a higher relevance score to torrents that matches 'pirate audio').
-	\item The ranking of search results are dependent on each other. This is noticeable when calculating the score based on normalized data. To normalize this data, we should have information about other search results. This prevents a "streaming-like" search operation where the relevance score of each search item is only dependent on data that search item contains and no other data.
-\end{itemize}
-
-\subsection{Designing a new ranking algorithm}
-In the previous Subsection, we described the old ranking algorithm, together with some problems and improvements. In this Subsection, we will design a new, robust and simplified algorithm. The heart of the algorithm will be based on Okapi BM25, a ranking function used by search engines to rank matching documents according to their relevance to a given search query\todo{afmaken + over remote search results}.
-
-\subsection{Ranking in the user interface}
-After each search result got a relevance score assigned, we should order the search results in the user interface. We cannot make the assumption that the data we receive from Tribler is already sorted (however, a relevance score should be available) thus we need a way to insert items dynamically in the list. The lazy-loading list we are using in the user interface makes this task more difficult since we both have to insert items dynamically in the list and make sure that we are not rendering too much row widgets. We also wish to avoid reordering operations as they are computational expensive to perform.\\\\
-The implemented solution works as follows: in the user interface, we maintain two lists in memory: one list that contains the torrent search results and another list that contains channel search results. We guarantee that these lists are always sorted on relevance score. Insert operations in this list are performed using a binary search to determine the new position of the item in the sorted list, leading to a complexity of $ O(log\ n) $ for each insert operation (where $ n $ is the number of items in the list). In the visible result list, we first display channels, which are usually only a few. The rationale behind this idea is that users prefer to see matching channels since these channels might contain many relevant torrents. We do not display channels that have a low number of torrents (less than three)\todo{hoe kom je hieraan?} or no votes. This solution is scalable to many search results\todo{hoeveel? testje?}. The performance of the new relevance ranking algorithm is discussed in Chapter \ref{sec:local-content-search}.
+\section{Updating software dependencies}
+A cause of aging software is the inability of developers to adopt to changing environment. This might be addressed to adoption of dependencies in the past, dependencies that are not maintained any more at a point in the future. Replacing these dependencies might be a non-trivial programming task, requiring the programmer to get familiar with both the interface of the old and new dependency.\\\\
+Tribler has a long list of dependencies, both in the code base and dependencies that are used for software packaging and testing. Keeping these dependencies on the latest version is often neglected or overlooked. Sometimes, this is not even possible, due to missing software in package managers such as \emph{yum}, the package manager used by CentOS or \emph{apt}, the package manager of Debian and Ubuntu. While this restriction holds for operating systems where we are not packaging dependencies, we have the freedom to package any dependency we want on Windows and MacOS so preferably, we often want to ship the latest, stable release of a dependency in our Tribler distribution.\\\\
+During this thesis, we updated several dependencies to newer versions, most notably \emph{libtorrent}. The code to handle the communication with this library (located in the \emph{Libtorrent} package) contained calls to deprecated functions in the \emph{libtorrent} library, functions that are not guaranteed to be maintained or compatible. We identified these calls as follows: first, a version of \emph{libtorrent} has been compiled without deprecated methods and assertions. Next, we manually ran Tribler and the test suite, observing any crash due to libtorrent. In total, this method yielded seven calls to deprecated methods that have been updated to call the correct function. Not only deprecated calls have been removed, we also fixed various assertions that were triggering due to incorrect assumptions made in the code. In order to remain backwards-compatible with older version of the libtorrent library (that some Ubuntu or Debian users might have installed on their system), some checks in the Tribler code base had to be implemented to check for the presence of a particular method in libtorrent.\\\\
+An additional outdated dependency in Tribler is \emph{py2exe}, used to create a Windows executable file out of the source code. \emph{py2exe} performs a static code analysis and determines code dependencies that should be bundled in the executable. Unfortunately, the library has not been updated since 2014 and requires a significant amount of code to make sure that everything works when Tribler is packaged and archived. We made attempts to replace \emph{py2exe} with the more mature, well-maintained \emph{PyInstaller} that also offers support for \emph{PyQt5}, the framework used for creation of the new interface. This library is not only easier to use, it also works across multiple platforms, allowing us to also drop the \emph{py2app} dependency which is used to distribute Tribler on MacOS. While not ready for deployment yet, a proof-of-concept has been created that successfully packages Tribler together with the new user interface into Windows and MacOS executable files. Further work should focus on the removal of \emph{py2exe} and \emph{py2app} in favour of \emph{PyInstaller}.
 
 \section{Improving Sofware Artifacts}
 During the last ten years of development on Tribler, the main focus of the project has been to deliver working code. The project had a severe lack of maintained software artifacts, including documentation, comments and architectural diagrams. Most of the conducted research was documented on the Tribler wiki\footnote{https://www.tribler.org/TitleIndex/}, however, this wiki is very outdated and not maintained anymore. After the migration of the project to GitHub, this platform was favoured over continued usage of the Tribler wiki archive.\\\\
