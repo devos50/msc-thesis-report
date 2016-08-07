@@ -1,6 +1,6 @@
 \chapter{Towards a new architecture}
 \label{chapter:towards_new_architecture}
-The discussion in Chapter \ref{chapter:architecture}, ended with a proposal of a new architecture. Now we will shift our focus on efforts on making this design a reality. This will mostly involve building the components that are located on a higher level in the proposed architecture, namely the new user interface, the REST API and \emph{libtribler}.
+The discussion in Chapter \ref{chapter:architecture} concluded with a proposal of a new future-proof architecture. Now, we will shift our focus on efforts on making this design a reality. This will mostly involve building the components that can be found on the higher levels of the proposed architecture, in particular the user interface, the REST API and \emph{libtribler}.
 
 \section{A clear distinction between GUI and core}
 As described in Chapter \ref{chapter:problem-description}, the code for the user interface and Tribler core code is interleaved to a large extent and there is no clear separation between these two. There are many instances where we find code present in the user interface code base that should be moved to the core and vice versa. To realise a clear separation between \emph{libtribler} and the user interface, instances like these should be fixed.\\\\
@@ -165,7 +165,7 @@ In the previous Subsection, we described the old ranking algorithm, together wit
 
 \begin{equation}
 \label{eq:bm25}
-s ‎=‎ \mathlarger{‎‎\sum}_{i=1}^{n‎} IDF(q_i) \frac{f(q_i, D)(k_1 + 1)}{f(q_i, D) + k_1 (1 - b + b * \frac{|D|}{avgdl})}
+s = \sum_{i=1}^{n} IDF(q_i) \frac{f(q_i, D)(k_1 + 1)}{f(q_i, D) + k_1 (1 - b + b * \frac{|D|}{avgdl})}
 \end{equation}
 
 In the formula above, we have a document $ D $ where the length of $ D $ is denoted as $ |D| $. There are $ n $ keywords present in our search query, $ q_i $ representing the keyword at index $ i $. $ f(\cdot, D) $ gives the frequency of keyword $ q_i $ in document $ D $. The $ IDF(q_i) $ denotes the \emph{inversed document frequency} of keyword $ q_i $ which basically states how important a keyword is in a document. The IDF is usually calculated as:
