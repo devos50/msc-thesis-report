@@ -1,0 +1,28 @@
+\chapter{Testing Tribler at a large scale (concept)}
+In the previous Chapter, we performed many small performance measurements and quantified the usability and performance of various common performed operations in Tribler. While these experiments gave us insights in the performance of Tribler, we didn't chain together multiple operations to investigate a pipeline.\\\\
+One of the main selling points of Tribler is the built-in anonymous overlay which provides anonymous downloading and seeding capabilities. In this Chapter, we will test a full pipeline of Tribler on a large scale, where we start Tribler, perform a remote keyword search, select a download and start this download anonymously. We will first discuss the setup of the experiment in more detail, after which we turn our focus to the results we observed during the experiment.
+
+\section{Setup of the experiment}
+The order of operations as performed in this experiment is visible in Figure \ref{fig:big-experiment-setup}. The experiment itself is executed on the DAS5 supercomputer where in every run, we allocate ten nodes and run one Tribler instance on every node.\\
+
+\begin{figure}[!h]
+	\centering
+	\includegraphics[width=0.8\columnwidth]{images/big_experiment/big_experiment_setup}
+	\caption{The setup of the experiment as described in this Chapter.}
+	\label{fig:big-experiment-setup}
+\end{figure}
+
+The experiment starts when Tribler is booted and we start with no pre-filled state directory. After Tribler has been started, we wait until we are connected to a sufficient amount of peers (30) in the \emph{SearchCommunity} before we perform the remote search. In the experiment described in Section \ref{sec:remote-content-search-experiment}, we waited until we are connected to at least 20 peers. We increased this number since we are running ten other Tribler nodes inside the same network that might connect with each other. When these Tribler nodes connect to each other, they provide no remote search results to each other since there is likely to be no discovered content in the database yet. The check to see whether we are connected to a sufficient amount of peers is performed every second.\\\\
+Once we have enough connections, we perform a remote torrent keyword search. For this purpose, we created a list of 1.000 popular keywords that have been constructed as follows: we analysed the database with just over 100.000 torrents, determined all keywords in the database, together with the frequency of each keyword and calculated a list of the keywords with the highest frequency in the database. In every run, we uniformly pick a random keyword from this list and perform a remote keyword search with the selected query.\\\\
+We wait 30 seconds for incoming search results and we store the time of the first and the last incoming remote search results. If we have no search results within 30 seconds, we abort the experiment. We save all incoming torrent results and after 30 seconds, we pick five random, non-explicit torrent results and query a metainfo lookup in the DHT. We are using a timeout period of 60 seconds for the DHT lookup operation: if we did not receive any response from one of the scheduled DHT lookup, we abort the experiment.\\\\
+As soon as the first incoming metainfo is received, we start the download of this torrent, where we enable anonymous downloading with one hop and hidden seeding. After three minutes, we abort the experiment and clean the downloaded data. We keep track of the time until the circuits are build and we receive the first incoming bytes. Additionally, we keep track of the total number of downloaded bytes after these three minutes.\\\\
+There are various failures that could lead to an interruption of the experiment, which we will summarize below:
+\begin{itemize}
+	\item If we are not connected to at least 30 peers in the \emph{SearchCommunity} after Tribler has started, we abort the experiment.
+	\item If we do not receive any remote torrent result within 30 seconds, we abort the experiment.
+	\item If we do not receive a response from any scheduled DHT lookup, we abort the experiment.
+\end{itemize}
+We also have various failures that influences our result but are not failing our experiment. An example of these failures is when we fail to build circuits within three minutes after starting the download. In this situation, we are still able to finish the experiment, however, our final results are influenced since we were not able to download any byte.
+
+\section{Observed results}
+Todo\todo{dit schrijven}

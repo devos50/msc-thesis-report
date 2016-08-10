@@ -280,15 +280,15 @@
 \setlength\@cover@spinewidth{0.375in}
 %% Width and height of the boxes on the front and back cover.
 \newlength\@cover@frontboxwidth
-\setlength\@cover@frontboxwidth{4.375in}
+\setlength\@cover@frontboxwidth{5.875in}
 \newlength\@cover@frontboxheight
-\setlength\@cover@frontboxheight{2.1875in}
+\setlength\@cover@frontboxheight{2.6875in}
 \newlength\@cover@fronttextwidth
 \newlength\@cover@fronttextheight
 \newlength\@cover@splitboxwidth
 \setlength\@cover@splitboxwidth{6.375in}
 \newlength\@cover@splitboxheight
-\setlength\@cover@splitboxheight{0.5\paperheight}
+\setlength\@cover@splitboxheight{0.27\paperheight}
 \newlength\@cover@splitboxtextwidth
 \newlength\@cover@splittextheight
 %% Position on the front cover where the corner of both boxes meet.
@@ -313,8 +313,8 @@
 \define@key{cover}{spinewidth}{\setlength\@cover@spinewidth{#1}}
 \define@key{cover}{frontboxwidth}{\setlength\@cover@frontboxwidth{#1}}
 \define@key{cover}{frontboxheight}{\setlength\@cover@frontboxheight{#1}}
-%\define@key{cover}{backboxwidth}{\setlength\@cover@backboxwidth{#1}}
-%\define@key{cover}{backboxheight}{\setlength\@cover@backboxheight{#1}}
+\define@key{cover}{backboxwidth}{\setlength\@cover@backboxwidth{#1}}
+\define@key{cover}{backboxheight}{\setlength\@cover@backboxheight{#1}}
 \define@key{cover}{x}{\setlength\@cover@x{#1}}
 \define@key{cover}{y}{\setlength\@cover@y{#1}}
 \define@key{cover}{ax}{\setlength\@cover@ax{#1}}
@@ -472,7 +472,7 @@
           \coordinate (front bottom right) at ($(front top left)+(\@cover@frontboxwidth,-\@cover@frontboxheight)$);
           \coordinate (back bottom right) at ($(back top left)+(\@cover@splitboxwidth,-\@cover@splitboxheight)$);
           %% Draw the front box in black.
-  %        \fill[fill=tudelft-black](front top left) rectangle (front bottom right);
+          \fill[fill=tudelft-black](front top left) rectangle (front bottom right);
           %% Calculate the width and height of the front text box.
           \setlength\@cover@fronttextwidth{\@cover@frontboxwidth}
           \addtolength\@cover@fronttextwidth{-2\@cover@margin}
@@ -495,7 +495,7 @@
               \end{minipage}
           };
           %% Draw the back box in cyan.
-  %        \fill[fill=tudelft-cyan](back top left) rectangle (back bottom right);
+          \fill[fill=tudelft-cyan](back top left) rectangle (back bottom right);
           %% Print the affiliation.
           \ifx\@affiliation\undefined\else
   %            \node at (back bottom right)[rotate=90,anchor=south west,inner sep=\@cover@margin]{
