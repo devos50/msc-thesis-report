@@ -384,14 +384,14 @@
         \else
           \ifKV@cover@back
               \node at (current page.south west)[anchor=south west,inner sep=20pt]{
-                  \includegraphics{cover/logo_black}
+                  %MARTIJN \includegraphics{cover/logo_black}
               };
               \node at (current page.south east)[anchor=south east,inner sep=20pt]{
-                  \includegraphics{cover/logo_black}
+                  %MARTIJN \includegraphics{cover/logo_black}
               };
           \else
               \node at (current page.south west)[anchor=south west,inner sep=20pt]{
-                  \includegraphics{cover/logo_black}
+                  %MARTIJN \includegraphics{cover/logo_black}
               };
           \fi
         \fi
@@ -419,11 +419,11 @@
             %% covers the cover image.
             \coordinate (spine top left) at ($(spine top left)-(1pt,0pt)$);
             %% Draw a black box on the spine.
-            \fill[fill=tudelft-black](spine top left) rectangle (spine bottom right);
+            %MARTIJN \fill[fill=tudelft-black](spine top left) rectangle (spine bottom right);
             %% Print the title on the center right of the spine box.
-            \node at (spine bottom center)[rotate=-90,anchor=east,inner sep=\@cover@margin]{
-                \tudsffamily\color{tudelft-white}\LARGE\@title
-            };
+            %MARTIJN \node at (spine bottom center)[rotate=-90,anchor=east,inner sep=\@cover@margin]{
+            %MARTIJN    \tudsffamily\color{tudelft-white}\LARGE\@title
+            %MARTIJN };
         \fi\fi
         %% Calculate the coordinate of the corner where the front and back boxes
         %% meet.
@@ -472,7 +472,7 @@
           \coordinate (front bottom right) at ($(front top left)+(\@cover@frontboxwidth,-\@cover@frontboxheight)$);
           \coordinate (back bottom right) at ($(back top left)+(\@cover@splitboxwidth,-\@cover@splitboxheight)$);
           %% Draw the front box in black.
-          \fill[fill=tudelft-black](front top left) rectangle (front bottom right);
+          %MARTIJN \fill[fill=tudelft-black](front top left) rectangle (front bottom right);
           %% Calculate the width and height of the front text box.
           \setlength\@cover@fronttextwidth{\@cover@frontboxwidth}
           \addtolength\@cover@fronttextwidth{-2\@cover@margin}
@@ -480,28 +480,16 @@
           \addtolength\@cover@fronttextheight{-2\@cover@margin}
           %% Create the front text box.
           \node at (front top left)[anchor=north west,inner sep=\@cover@margin]{
-              \begin{minipage}[t][\@cover@fronttextheight]{\@cover@fronttextwidth}
-                  %% Print the title and optional subtitle at the top in white.
-                  {\largetitlestyle\color{\@titlecolor}\fontsize{96}{96}\selectfont\@title}
-  %                {\tudsffamily\color{\@titlecolor}\fontsize{96}{96}\selectfont\@title}
-                  \ifx\@subtitle\undefined\else
-                      \\[3mm]
-                      {\tudsffamily\color{\@subtitlecolor}\fontsize{22}{32}\selectfont\@subtitle}
-                  \fi
-                  %% Print the author at the bottom in cyan.
-                  \vfill
-  %                {\tudtitlefamily\color{\@authorcolor}\fontsize{26}{26}\selectfont\@author}
-                  {\largetitlestyle\color{\@authorcolor}\fontsize{26}{26}\selectfont\@author}
-              \end{minipage}
+              
           };
           %% Draw the back box in cyan.
-          \fill[fill=tudelft-cyan](back top left) rectangle (back bottom right);
+          %MARTIJN \fill[fill=tudelft-cyan](back top left) rectangle (back bottom right);
           %% Print the affiliation.
           \ifx\@affiliation\undefined\else
   %            \node at (back bottom right)[rotate=90,anchor=south west,inner sep=\@cover@margin]{
-              \node at (acorner)[rotate=90,anchor=south west,inner sep=\@cover@margin]{
-                  \tudsffamily\color{\@afilcolor}\@affiliation
-              };
+              %MARTIJN \node at (acorner)[rotate=90,anchor=south west,inner sep=\@cover@margin]{
+                  %MARTIJN \tudsffamily\color{\@afilcolor}\@affiliation
+              % MARTIJN };
           \fi
 %          \ifKV@cover@back\ifx\@cover@text\undefined\else
 %              %% Calculate the width and height of the back text box.
