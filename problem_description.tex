@@ -59,7 +59,6 @@ Testing is the responsibility of every developer that contributes to Tribler. Ov
 There is an additional flaw that contributes to the instability of the current test suite. A significant part of the test suite is depends on external network resources, ranging from torrent trackers and seeders to other peers in the decentralized Dispersy network. This fragile architecture gives rise to failing tests due to unavailable nodes, unexpected responses from external peers and other unpredicted circumstances.\\\\
 In general, well designed tests exclude any dependency on external resource that is outside the control of the developer. This can be achieved by mocking method calls to return dummy data. Additionally, one can make sure that the external resource is available in the local testing environment. For instance, when a test is dependent on a specific torrent seeder, a local \emph{libtorrent} session can be started that seeds this torrent.\\\\
 While Tribler is packaged and distributed on multiple platforms, the tests in our continuous integration environment are only executed on a machine running a Linux operating system. Limiting test execution to one platform, lowers the overall code coverage and covers platform-specific bugs\cite{beller2016oops}. Attention should be given to make our test execution multi-platform.
-% http://shhetri.github.io/unit-testing-to-tackle-technical-debt/
 
 \begin{figure}[h!]
 	\centering
