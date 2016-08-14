@@ -33,7 +33,8 @@ The phenomena has an origin which can be traced back to strategic decisions take
 Finally, we consider the impact of the technical debt: for instance, what are the required changes we have to perform in order to pay off the debt?\\\\
 From the perspective of end users, technical debt can be both invisible and visible\cite{kruchten2012technical}.
 Examples of invisible technical debt includes code smells, coding style violations, low internal quality and high code complexity, issues developers should deal with.
-Visible debt is expressed in defects that are affecting users but can also be identified by user-unfriendly, cluttered Graphical User Interfaces (GUIs) that has been subject to various reckless modifications: decisions to extend and evolve the user interface with new visual elements, can lead to a high amount of technical debt and a poor user experience.\\\\
+Visible debt is expressed in defects that are affecting users but can also be identified by user-unfriendly, cluttered Graphical User Interfaces (GUIs) that has been subject to various reckless modifications: decisions to extend and evolve the user interface with new visual elements, can lead to a high amount of technical debt and a poor user experience.
+In more extreme cases, the price of technical debt has to be paid with human lives as is painfully illustrated by a Toyota car accident due to unintended acceleration: after a review of Toyota’s software engineering process and the source code for the 2005 Toyota Camry car, it was concluded that the system was defective and dangerous, riddled with bugs and gaps in its failsafes that led to the root cause of the crash\cite{toyotatechnicaldebt}.\\\\
 The term itself is borrowed from the finance domain\cite{guo2011portfolio}.
 There is however one important distinction between financial debt and technical debt: when dealing with financial debt, the costs that the debtor has to pay is usually clear.
 This is not always the case with technical debt since there might be some situations where no technical debt is incurred.
@@ -43,7 +44,7 @@ There are several causes that contribute to the amount of accumulated technical 
 Technical debt often becomes a noticeable problem in large systems that are built and maintained by many contributors. Tribler is an example of such a system: the software is the result of ten ongoing years of scientific research in the area of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
 The software is the combination of four disruptive techniques in one large code base: \emph{BitTorrent}, allowing users to download files in a decentralized matter, \emph{Tor}, providing anonymity and strong encryption, \emph{Bitcoin}, offering a way to introduce the notion of trustworthiness inside a decentralized network and \emph{Wikipedia}, allowing collaborative editing of content. These components are depicted in Figure \ref{fig:tribler-connections}.\\
 
-\begin{figure}[h!]
+\begin{figure}[t]
 	\centering
 	\includegraphics[width=0.6\columnwidth]{images/introduction/tribler_connections}
 	\caption{The four disruptive technologies as integrated in Tribler.}
