@@ -8,7 +8,9 @@ Making decisions that are beneficial on the short term, might lead to significan
 The phenomenon of favouring short-term development goals over longer term requirements is often referred to as \emph{technical debt}.
 While technical debt might not have implicit consequences on the user experience, it dramatically impacts quality and maintainability of software.
 Research has confirmed that there exists a correlation between the amount of design flaws and vulnerabilities in a system\cite{nord2016debtvulnerabilities}.
-A high amount of technical debt also leads to a greater likelihood of defects, unintended re-engineering efforts\cite{li2014empirical} and increased development time when implementing new functionalities.\\\\
+A high amount of technical debt also leads to a greater likelihood of defects, unintended re-engineering efforts\cite{li2014empirical} and increased development time when implementing new functionalities.
+
+\section{Technical Debt}
 The term technical debt was first introduced by Ward Cunningham in 1992 as writing "not quite right" code in order to ship a new product or feature to market faster\cite{cunningham1993wycash}.
 Since then, the term has gained progressively more attention in the software engineering research and agile community.
 Effective management of such debt is considered critical to achieve and to maintain an adequate level of software quality.
@@ -40,9 +42,11 @@ There is however one important distinction between financial debt and technical 
 This is not always the case with technical debt since there might be some situations where no technical debt is incurred.
 For instance, if it is known for a part of the system to never be updated or maintained in the future, development time and budget can be saved by not updating the related documentation.
 Software engineers need to be carefully with the consideration what technical debt they wish to incur and when this debt will be paid off at specific points in time.\\\\
-There are several causes that contribute to the amount of accumulated technical debt during the software development process\cite{martini2014architecture}. Time pressure can cause developers to think reckless about their design and architecture. Uncertainty in decision making during an early stage of development might lead to higher technical debt later on. Finally, in an agile environment, software requirements might change more often, causing the underlying architecture and code base to change to a certain extent. Not properly managing such changes can lead to significant technical debt.\\\\
+There are several causes that contribute to the amount of accumulated technical debt during the software development process\cite{martini2014architecture}. Time pressure can cause developers to think reckless about their design and architecture. Uncertainty in decision making during an early stage of development might lead to higher technical debt later on. Finally, in an agile environment, software requirements might change more often, causing the underlying architecture and code base to change to a certain extent. Not properly managing such changes can lead to significant technical debt.
+
+\section{Tribler}
 Technical debt often becomes a noticeable problem in large systems that are built and maintained by many contributors. Tribler is an example of such a system: the software is the result of ten ongoing years of scientific research in the area of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
-The software is the combination of four disruptive techniques in one large code base: \emph{BitTorrent}, allowing users to download files in a decentralized matter, \emph{Tor}, providing anonymity and strong encryption, \emph{Bitcoin}, offering a way to introduce the notion of trustworthiness inside a decentralized network and \emph{Wikipedia}, allowing collaborative editing of content. These components are depicted in Figure \ref{fig:tribler-connections}.\\
+The software is the combination of four disruptive techniques in one large code base: \emph{BitTorrent}, allowing users to download files in a decentralized matter, \emph{Tor}, providing anonymity and strong encryption, \emph{Bitcoin}, offering a way to introduce the notion of trustworthiness inside a decentralized network and \emph{Wikipedia}, allowing collaborative editing of content. These components are depicted in Figure \ref{fig:tribler-connections}\todo{nog iets uitbreiden}.\\
 
 \begin{figure}[h!]
 	\centering
@@ -51,9 +55,9 @@ The software is the combination of four disruptive techniques in one large code 
 	\label{fig:tribler-connections}
 \end{figure}
 
-Anonymity by the utilization of a Tor-like protocol has been added In 2014 by the work of R. Plak\cite{plak2014anonymous} and J.H. Tanaskoski\cite{tanaskoski2014anonymous}. 
+Anonymity by the utilization of a Tor-like protocol has been added In 2014 by the work of  Plak\cite{plak2014anonymous} and Tanaskoski\cite{tanaskoski2014anonymous}. 
 In 2015, the protocol has been extended to support anonymous seeding of torrents\cite{ruigrok2015bittorrent}.
-The graphical user interface of Tribler is shown in figure \ref{fig:tribler-interface}.
+The graphical user interface of Tribler is shown in figure \ref{fig:tribler-interface}.\\
 
 \begin{figure}[h!]
 	\centering
@@ -62,17 +66,25 @@ The graphical user interface of Tribler is shown in figure \ref{fig:tribler-inte
 	\label{fig:tribler-interface}
 \end{figure}
 
-This thesis work will be centred around identification and management of the accumulated technical debt within the code base of Tribler. With this in mind, we formulate the following research question:\\\\
-\emph{How can we track, manage and prevent technical debt within Tribler?}\\\\
-This question can be divided into several sub questions:
+\section{Research Questions}
+This thesis work will be centred around identification and management of the accumulated technical debt within the code base of Tribler. With this in mind, we formulate the overall research question:\\
+
+\noindent\fbox{%
+	\parbox{\textwidth}{%
+		How can we track, erase and prevent technical debt within Tribler?
+	}%
+}\\
+
+This research question can be divided into three aspects:
 \begin{enumerate}
 	\item What are the adequate tools to identity how much technical debt there is in Tribler?
 	\item What is the right approach to pay off each identified kind of technical debt?
 	\item What are the adequate requirements in the software development process to prevent decisions that are leading to a high amount of debt later in the development process?
 \end{enumerate}
 The rest of this document is outlined as follows: in Chapter \ref{chapter:problem-description}, the current state of the system will be elaborated, highlighting flaws and impurity in the design and code base. 
-In Chapter \ref{chapter:architecture}, the evolution of Tribler over the past ten years will be presented and we lay the foundations for a next decade of scientific research with Tribler by proposing a new future-proof and robust architecture.
-The first efforts towards a realisation of this new architecture will be discussed in Chapter \ref{chapter:towards-new-architecture} by the implementation of a RESTful API and a new user interface. Next, in Chapter \ref{chapter:refactoring}, we will focus on the question whether we should pay off the debt in the core of Tribler and how we can do that. 
+In Chapter \ref{chapter:architecture}, the evolution of Tribler over the past ten years will be discussed and we lay the foundations for a next decade of scientific research with Tribler by proposing a new future-proof, robust and layered architecture.
+The first efforts towards a realisation of this new architecture will be discussed in Chapter \ref{chapter:towards-new-architecture} by the implementation of a RESTful API and a new user interface. 
+Next, in Chapter \ref{chapter:refactoring}, we will focus on identified technical debt with the Tribler core and discuss what is involved to reduce this amount. 
 We will discuss efforts to improve code quality, architecture, infrastructure and the testing framework.
 The performance of Tribler after our refactoring efforts will be discussed in Chapter \ref{chapter:experiments}.
 By conduction various benchmarks and performance measurements, the user experience of Tribler will be assessed.
