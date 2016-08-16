@@ -44,7 +44,7 @@ There are several causes that contribute to the amount of accumulated technical 
 Technical debt often becomes a noticeable problem in large systems that are built and maintained by many contributors. Tribler is an example of such a system: the software is the result of ten ongoing years of scientific research in the area of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
 The software is the combination of four disruptive techniques in one large code base: \emph{BitTorrent}, allowing users to download files in a decentralized matter, \emph{Tor}, providing anonymity and strong encryption, \emph{Bitcoin}, offering a way to introduce the notion of trustworthiness inside a decentralized network and \emph{Wikipedia}, allowing collaborative editing of content. These components are depicted in Figure \ref{fig:tribler-connections}.\\
 
-\begin{figure}[t]
+\begin{figure}[h!]
 	\centering
 	\includegraphics[width=0.6\columnwidth]{images/introduction/tribler_connections}
 	\caption{The four disruptive technologies as integrated in Tribler.}
@@ -55,18 +55,18 @@ Anonymity by the utilization of a Tor-like protocol has been added In 2014 by th
 In 2015, the protocol has been extended to support anonymous seeding of torrents\cite{ruigrok2015bittorrent}.
 The graphical user interface of Tribler is shown in figure \ref{fig:tribler-interface}.
 
-\begin{figure}[!h]
+\begin{figure}[h!]
 	\centering
-	\includegraphics[width=0.9\columnwidth]{images/introduction/tribler_interface}
+	\includegraphics[width=1.0\columnwidth]{images/introduction/tribler_interface}
 	\caption{The graphical user interface of Tribler v6.5.2.}
 	\label{fig:tribler-interface}
 \end{figure}
 
-This thesis work will be centred around identification and management of the accumulated technical debt within the code base of Tribler. With this in mind, we can be formulated the following research question:\\\\
+This thesis work will be centred around identification and management of the accumulated technical debt within the code base of Tribler. With this in mind, we formulate the following research question:\\\\
 \emph{How can we track, manage and prevent technical debt within Tribler?}\\\\
 This question can be divided into several sub questions:
 \begin{enumerate}
-	\item What are the adequate tools to identity the amount of technical debt within Tribler?
+	\item What are the adequate tools to identity how much technical debt there is in Tribler?
 	\item What is the right approach to pay off each identified kind of technical debt?
 	\item What are the adequate requirements in the software development process to prevent decisions that are leading to a high amount of debt later in the development process?
 \end{enumerate}
