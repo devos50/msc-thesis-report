@@ -83,9 +83,11 @@ This research question can be divided into three aspects:
 \end{enumerate}
 The rest of this document is outlined as follows: in Chapter \ref{chapter:problem-description}, the current state of the system will be elaborated, highlighting flaws and impurity in the design and code base. 
 In Chapter \ref{chapter:architecture}, the evolution of Tribler over the past ten years will be discussed and we lay the foundations for a next decade of scientific research with Tribler by proposing a new future-proof, robust and layered architecture.
-The first efforts towards a realisation of this new architecture will be discussed in Chapter \ref{chapter:towards-new-architecture} by the implementation of a RESTful API and a new user interface. 
+The first efforts towards a realisation of this new architecture will be discussed in Chapter \ref{chapter:towards-new-architecture} by the implementation of a RESTful API and a new user interface.
 Next, in Chapter \ref{chapter:refactoring}, we will focus on identified technical debt with the Tribler core and discuss what is involved to reduce this amount. 
-We will discuss efforts to improve code quality, architecture, infrastructure and the testing framework.
+We will discuss efforts to pay off \emph{code debt}, \emph{testing debt}, \emph{infrastructure debt}, \emph{architectural debt} and \emph{documentation debt}.\\\\
 The performance of Tribler after our refactoring efforts will be discussed in Chapter \ref{chapter:experiments}.
-By conduction various benchmarks and performance measurements, the user experience of Tribler will be assessed.
+By conduction various benchmarks and performance measurements, we show that our refactoring did not effect the performance of Tribler in a negative sense.
+We will also use these performance experiments to get insights in the usability of various components available in the Tribler core.
+In chapter \ref{chapter:large-scale-experiment}, we extended the experiments performed in Chapter \ref{chapter:experiments} and test Tribler at a larger scale where we focus on the identification of failures and the duration of operations commonly performed by Tribler users.
 We will end with the conclusions and propose future work in Chapter \ref{chapter:conclusions}.
