@@ -2,7 +2,7 @@
 \label{chapter:towards-new-architecture}
 The discussion in Chapter \ref{chapter:architecture} concluded with a proposal of a new future-proof architecture. We now present our implementation steps towards the new architecture with the implementation of a new user interface and the RESTful API.
 
-\section{REST API}
+\section{RESTful API}
 As described in Chapter \ref{chapter:architecture}, communication between the user interface and the core of Tribler is facilitated by a RESTful API in our design. This Section explains the implementation details of the API in more detail.\\\\
 The REST API has been implemented using facilities in the Twisted library. While there are plenty of Python solutions available that allow developers to create a web server in their application, we made the choice to use Twisted since it is already utilized to a great extent by Tribler. With the ability to integrate the REST API into the main application flow, we avoid having to create special constructions to execute the API on a separate thread like we are doing now with the video server. The API internally in Twisted is represented as a tree of resources which is in accordance with the REST architecture where the URL of the request can be treated like a path in the resource tree. If we visualize the import graph of the API package, this tree-like structure is somewhat visible, see Figure \ref{fig:importgraph-api}. We will highlight and discuss some important files in the API package:
 \begin{itemize}
@@ -138,16 +138,23 @@ In Section \ref{subsec:architecture-twisted}, we discussed that the current thre
 
 \section{Relevance Ranking Algorithm}
 \label{sec:relevance-ranking-algorithm}
-We significantly improved the search algorithm in Tribler by adjusting the result sorting mechanism. When users are performing a search in the user interface, the returned search results are sorted according to a relevance ranking algorithm that considers several factors of the search results. A key problem of this algorithm is that the implementation is located inside the code base associated with the user interface. Essentially, sorting search results can be considered a task of the Tribler core. Moving the algorithm to the core module seems to be a adequate solution but this requires us to understand the old relevance ranking rules so we can reimplement the algorithm in the core module. Unfortunately, the code that is responsible for the relevance ranking lacks proper documentation and is hard to read and understand. Moreover, the code it split between several classes, making it harder to understand its behaviour\todo{review}.
+We significantly improved the search algorithm in Tribler by adjusting the search result sorting mechanism. When users are performing a keyword search in the user interface, the returned search results are sorted according to a relevance ranking algorithm that considers several attributes of the search results. A key problem of this algorithm is that the implementation is located inside the user interface code base. Essentially, sorting search results should be considered a task where the Tribler core is responsible for. Moving the algorithm to the core module seems to be a adequate solution but this requires us to understand the old relevance ranking rules so we can reimplement the algorithm in the core module. Unfortunately, the code that is responsible for the relevance ranking is hard to read and understand. Even worse, it lacks proper documentation, making the functioning algorithm rather obscure. Moreover, the code it split between several classes, making it though to understand its behaviour\todo{review}.
 
 \subsection{Old Ranking Algorithm}
-Sorting of channels and torrents are both using a different algorithm. Channels are sorted on the number of torrents where channels that have a higher number of torrents, are displayed higher in the list. The algorithm to sort torrents on relevance is more complex and uses five different scores. These scores are determined as follows (ordered on importance):
+Channels and torrents are sorted according to different criteria: channels are ranked on the number of torrents where ones that have a higher number of torrents, are displayed at a higher position in the list. The algorithm to sort torrents on relevance is more involved and uses five different scores. These scores are determined as follows (ordered on importance):
 \begin{enumerate}
-	\item The number of matching keywords in the name of the torrent. Keywords are determined by splitting the name of a torrent on non-alphabetical characters and common keywords such as \emph{the} are filtered out.
-	\item The position of the lowest matching keyword in the torrent name. For instance, when searching for \emph{One} and there is a torrent result named \emph{Pioneer-One-S01E03.avi}, the position of the lowest matching keyword is 2, since \emph{Pioneer} is not present in the search query.
+	\item The number of matching keywords in the name of the torrent. Keywords are determined by splitting the name of a torrent on non-alphabetical characters. Common keywords such as \emph{the} or \emph{be} are filtered out and not considered as a keyword.
+	\item The position of the lowest matching keyword in the torrent name. For instance, when searching for \emph{one} and there is a torrent result named \emph{Pioneer-one-S01E03.avi}, the position of the lowest matching keyword is 2, since \emph{Pioneer} is not present in the search query.
 	\item The number of matching keywords in the file names that the torrent contains.
-	\item The number of matching keywords in the extension of the files (for instance, \emph{avi}, \emph{iso} etc).
-	\item A score that is based on several (normalised) attributes of the torrent. This score is determined after the set of local search results are constructed. To calculate this score, the following formula is used: $ s = 0.8 * n_s - 0.1 * n_{vn} + 0.1 * n_{vp} $ where $ s $ is our score, $ n_s $ denotes the number of seeders (0 if this information is not available yet), $ n_{vn} $ the number of negatives votes of this torrent and $ n_{vp} $ the amount of positive votes this torrent has received. We should note that the number of positive and negative votes do not exist any more and as a consequence will always be 0, making this score only dependent on the number of seeders. The normalization process calculates the standard score for every data item, using the following formula:
+	\item The number of matching keywords in the extension of the files this torrent contains (for instance, \emph{avi}, \emph{iso} etc).
+	\item A sub score that is based on several (normalised) attributes of the torrent. This sub score is determined after the set of local search results are constructed. To calculate this sub score, the following formula is used: 
+	
+	\begin{equation}
+	\label{eq:score-old-ranking-5}
+	s = 0.8n_s - 0.1n_{vn} + 0.1n_{vp}
+	\end{equation}
+	
+	 where $ s $ is our sub score, $ n_s $ denotes the number of seeders (this will be 0 if this information is not available yet), $ n_{vn} $ the number of negatives votes of this torrent and $ n_{vp} $ the amount of positive votes this torrent has received. We should note that the number of positive and negative votes do not exist any more and as a consequence will always be zero, making this score only dependent on the number of seeders, which during our observation is often zero. The normalization process calculates the standard score for every data item, using the following formula:
 	
 	\begin{equation}
 	\label{eq:normalization-standard-score}
