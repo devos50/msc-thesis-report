@@ -1,6 +1,6 @@
 \chapter{Gumby scenario file commands}
 \label{appendix:gumby-scenario-commands}
-As described in Chapter \ref{chapter:experiments}, a standalone Tribler runner that uses a scenario file has been created. The scenario file allows developers to specify commands at specific points in time after Tribler has booted. This Appendix describes the implemented commands and usage.
+As described in Chapter \ref{chapter:experiments}, a standalone Tribler runner that uses a scenario file has been created. The scenario file allows developers to specify commands at specific points in time after Tribler has booted. This Appendix describes the implemented commands and their usage. Table \ref{table:gumby-scenario-file} presents a table with commands. Listing \ref{lst:gumby-scenario-sample} gives a basic example of a Gumby scenario file.
 
 \begin{table}[h!]
 	\begin{tabularx}{\textwidth}{|X|X|X|}
@@ -8,7 +8,7 @@ As described in Chapter \ref{chapter:experiments}, a standalone Tribler runner t
 		\textbf{Command} & \textbf{Argument(s)} & \textbf{Description}\\ \hline
 		\emph{start\_session} & - & Start a Tribler session.\\ \hline
 		\emph{stop\_session} & - & Stop a running Tribler session.\\ \hline
-		\emph{stop} & - & Stop the experiment and write the gathered statistics.\\ \hline
+		\emph{stop} & - & Stop the experiment and write the gathered statistics to files.\\ \hline
 		\emph{clean\_state\_dir} & - & Clean the default state directory of Tribler.\\ \hline
 		\emph{search\_torrent} & The search query and optionally the minimum number of peers required in before the search is performed. & Perform a remote torrent search.\\ \hline
 		\emph{local\_search\_torrent} & The search query. & Perform a local torrent search in the database.\\ \hline
@@ -19,3 +19,13 @@ As described in Chapter \ref{chapter:experiments}, a standalone Tribler runner t
 	\caption{An overview of commands for the Gumby scenario file when performing experiments with Tribler.}
 	\label{table:gumby-scenario-file}
 \end{table}
+
+\begin{lstlisting}[caption={An example of a Gumby scenario file.},label={lst:gumby-scenario-sample}]
+# A simple Gumby scenario file that runs Tribler and performs some basic actions
+@0:2 start_session
+@0:10 subscribe 11FC61602C9533AE51B6A05E47B6BFBB75DCB5FD
+@0:15 get_metainfo 3d84795cc957a1d7bf127a129ef17aa680113467
+@0:45 search_torrent test
+@0:80 stop_session
+@0:85 stop
+\end{lstlisting}
