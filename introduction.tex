@@ -22,12 +22,12 @@ Figure \ref{fig:technical-debt-quadrant} presents this distinction in more detai
 
 \begin{figure}[!h]
 	\centering
-	\includegraphics[width=0.5\columnwidth]{images/introduction/technical_debt_quadrant}
+	\includegraphics[width=0.49\columnwidth]{images/introduction/technical_debt_quadrant}
 	\caption{The technical debt quadrant, as proposed by Martin Fowler\cite{technicaldebtquadrant}.}
 	\label{fig:technical-debt-quadrant}
 \end{figure}
 
-Technical debt has various interesting properties, explored and defined in the work of Brown et al\cite{brown2010managing}. 
+\noindent Technical debt has various interesting properties, explored and defined in the work of Brown et al\cite{brown2010managing}. 
 Whether the debt is \emph{visible} or not to the developer is an important factor during software engineering as significant problems can arise when the debt is not clearly visible to other developers.
 The \emph{value} of technical debt is the economic difference between the system as it is and the system in an ideal state for the assumed environment.
 The technical debt is relative to a given or assumed \emph{environment}.
@@ -48,14 +48,14 @@ There are several causes that contribute to the amount of accumulated technical 
 Technical debt often becomes a noticeable issue in large systems that are built and maintained by many contributors. Tribler is an example of such a system: the software is the result of ten ongoing years of scientific research in the area of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
 The software is the combination of four disruptive technologies in one large code base: decentralized file downloading, onion routing, providing anonymous download and end-to-end encryption, the blockchain, offering a way to introduce the notion of trustworthiness inside a decentralized network and collaborative editing of content like Wikipedia. These technologies, together with an example application are depicted in Figure \ref{fig:tribler-connections}.\\
 
-\begin{figure}[h!]
+\begin{figure}[t!]
 	\centering
 	\includegraphics[width=0.6\columnwidth]{images/introduction/tribler_connections}
 	\caption{The four disruptive technologies as integrated in Tribler.}
 	\label{fig:tribler-connections}
 \end{figure}
 
-Anonymity by the utilization of a Tor-like protocol has been added In 2014 by the work of Plak\cite{plak2014anonymous} and Tanaskoski\cite{tanaskoski2014anonymous}. 
+\noindent Anonymity by the utilization of a Tor-like protocol has been added In 2014 by the work of Plak\cite{plak2014anonymous} and Tanaskoski\cite{tanaskoski2014anonymous}. 
 In 2015, the protocol has been extended to support anonymous seeding of torrents\cite{ruigrok2015bittorrent}.
 More recent research is focussed on credit mining where it is attempted to build a mechanism to automatically join torrent swarms and donate bandwidth to the network. The work of Norberhuis\cite{norberhuis2015multichain} who implemented a cybercurrency for cooperation in Tribler, is currently being explored and extended.
 The graphical user interface of Tribler is shown in figure \ref{fig:tribler-interface}.\\
