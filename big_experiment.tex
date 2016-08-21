@@ -1,4 +1,4 @@
-\chapter{Testing Tribler at a Large Scale}
+\chapter{Testing Tribler on a Large Scale}
 \label{chapter:large-scale-experiment}
 In the previous chapter, we performed various small performance measurements and quantified the usability and performance of common performed operations in Tribler such as performing a remote search and downloading content. While these experiments gave us insights in the performance of key components in libtribler, we focused on a single part of the system during every experiment.\\\\
 In this chapter, we focus on how several components in libtribler work together. The purpose of this experiment is to identify failures and to get a detailed timeline with durations of each operation. We will perform a test on a large scale, where we start the application, perform a remote keyword search, select a torrent and start a download using the anonymous overlay network. We will first discuss the set-up of the experiment in more detail, after which we turn our focus to the results we observed during the experiment. As far as we are aware, this is the first time that we assess the performance of Tribler with a full sequence of operations.
