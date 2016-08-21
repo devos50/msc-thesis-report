@@ -188,13 +188,24 @@ We conclude this experiment with the conclusion that the remote search is reliab
 \section{Local Content Search}
 \label{sec:local-content-search}
 In the previous section, we demonstrated and elaborated the performance of the remote content search mechanism. Now, we will shift the focus to performance measurements of local content search, which is considered more trivial than the remote search counterpart due to the lack of network communication. In particular, our goal is to quantify the performance gain or loss when switching to the new relevance ranking algorithm where we utilized a newer database search engine, as described in Section \ref{sec:relevance-ranking-algorithm}.\\\\
-The set-up of this experiment is as follows: a database with just over 100.000 torrents is used. Around ten seconds after starting Tribler, we perform a local torrent search every second and we do this for 1.000 random keywords that are guaranteed to match at least one torrent in our database. We will measure both the time spent by the database lookup and the time it takes for the data to be post-processed after being retrieved from the database. In the code base of November '15, this post-processing step involves determining the associated channels that are containing a specific torrent result. This experiment is performed for the old method that uses the Full Text Search 3 (FTS3) engine and the new procedure that uses the more recent Full Text Search 4 (FTS4) engine. According to the SQLite documentation, FTS3 and FTS4 are nearly identical, however, FTS4 contains an optimization where results are returned faster when performing searches with keywords that are common in the database. The result of the experiments with the old and new local search logic is visible in Figure \ref{fig:local-search-fts3-fts4}, presented in two ECDF plots with on the horizontal axis, the time of either the database query time (the red line) or the total time for the processing of results, including the database query time (the blue/green line).\\
+The set-up of this experiment is as follows: a database with just over 100.000 torrents is used. Around ten seconds after starting Tribler, we perform a local torrent search every second and we do this for 1.000 random keywords that are guaranteed to match at least one torrent in our database. We will measure both the time spent by the database lookup and the time it takes for the data to be post-processed after being retrieved from the database. In the code base of November '15, this post-processing step involves determining the associated channels that are containing a specific torrent result. This experiment is performed for the old method that uses the Full Text Search 3 (FTS3) engine and the new procedure that uses the more recent Full Text Search 4 (FTS4) engine. According to the SQLite documentation, FTS3 and FTS4 are nearly identical, however, FTS4 contains an optimization where results are returned faster when performing searches with keywords that are common in the database. The result of the experiments with the old and new local search logic is visible in Figure \ref{fig:local-keyword-search}, presented in two ECDF plots: Figure \ref{fig:local-keyword-search-fts3} gives the distribution of local keyword search times with the old algorithm, using FTS3. Figure \ref{fig:local-keyword-search-fts4} presents the search times of the new local search algorithm, using FTS4. In both plots, the horizontal axis denotes the time of either the database query time (the orange line) or the total time for the processing of results, including the database query time (the blue/green line).\\
 
-\begin{figure}[h!]
+\begin{figure}[t]
 	\centering
-	\includegraphics[width=1.0\columnwidth]{images/experiments/local_search_fts3_fts4}
-	\caption{A comparison of the performance of local keyword searches between the old local search mechanism utilizing the FTS3 and FTS4 engine.}
-	\label{fig:local-search-fts3-fts4}
+	\begin{subfigure}[b]{1\textwidth}
+		\includegraphics[width=1\linewidth]{images/experiments/local_search_fts3}
+		\caption{Local keywords search (FTS3), old algorithm.}
+		\label{fig:local-keyword-search-fts3} 
+	\end{subfigure}
+	
+	\begin{subfigure}[b]{1\textwidth}
+		\includegraphics[width=1\linewidth]{images/experiments/local_search_fts4}
+		\caption{Local keywords search (FTS4), new algorithm.}
+		\label{fig:local-keyword-search-fts4}
+	\end{subfigure}
+	
+	\caption{The distribution of local search durations of the old (FTS3) and new (FTS4) algorithm.}
+	\label{fig:local-keyword-search}
 \end{figure}
 
 Local content search is very fast, delivering results in several milliseconds and performance engineering on the local content search engine should not be prioritized. We see that the two lines in the FTS3 and FTS4 plots have moved closer to each other which means that the total time of post-processing of torrent results has decreased. This is in line with our expectations since the new relevance ranking algorithm should be less computationally expensive than the old one. In addition, the new algorithm takes less factors in considering, for instance, the swarm health of the torrent. The increase in performance from FTS3 to FTS4 is visible but not significant.\\\\
@@ -304,7 +315,7 @@ Next, we will focus on the turnaround time of successful TFTP requests, presente
 \subsection{Distributed Hash Table}
 \label{subsec:dht-experiment}
 Another additional source of torrent meta info is the DHT. In the DHT, we can lookup meta info of a torrent. In this section, we will perform an experiment to get insights in the availability of torrent files and the performance of lookup operations in the DHT. Like in the TFTP experiment described in the previous section, we wish this meta info to be available as soon as possible to the user.\\\\
-For this experiment, a popular channel with over 5.000 torrents is considered and a subset of 1.000 torrent infohashes in this channel is determined. We start Tribler from a clean state and every 40 seconds, a DHT query is performed with one of the 1.000 random infohashes. The time out period used in Tribler is 30 seconds, after which a failure callback is invoked and an error is displayed in the user interface to notify the user about the failed request. The results of this experiments are visible in the ECDF depicted in Figure \ref{fig:metainfo_fetch} where the horizontal axis denotes the request time in seconds before the DHT lookup is completed.\\
+For this experiment, a popular channel with over 5.000 torrents is used and a subset of 1.000 random torrent infohashes in this channel is determined. We start Tribler from a clean state and every 40 seconds, a DHT query is performed with one of the 1.000 random infohashes. The time out period used in Tribler is 30 seconds, after which a failure callback is invoked and an error is displayed in the user interface to notify the user about the failed request. The results of this experiments are visible in the ECDF depicted in Figure \ref{fig:metainfo_fetch} where the horizontal axis denotes the request time in seconds before the DHT lookup is completed.\\
 
 \begin{figure}[!h]
 	\centering
