@@ -44,16 +44,16 @@ For instance, if it is known for a part of the system to never be updated or mai
 Software engineers need to be careful with the consideration what technical debt they wish to incur and whether or when this debt will be paid off at specific points in time.\\\\
 There are several causes that contribute to the amount of accumulated technical debt during the software development process\cite{martini2014architecture}. Time pressure can cause developers to think reckless about their design and architecture. Uncertainty in decision making during an early stage of development might lead to higher technical debt later on. Finally, in an agile environment, software requirements might change more often, causing the underlying architecture and code base to change to a certain extent. Not properly managing such changes can lead to incurred technical debt.
 
-\section{Tribler}
-Technical debt often becomes a noticeable issue in large systems that are built and maintained by many contributors. Tribler is an example of such a system: the software is the result of ten ongoing years of scientific research in the area of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
-The software is the combination of four disruptive technologies in one large code base: decentralized file downloading, onion routing, providing anonymous download and end-to-end encryption, the blockchain, offering a way to introduce the notion of trustworthiness inside a decentralized network and collaborative editing of content like Wikipedia. These technologies, together with an example application are depicted in Figure \ref{fig:tribler-connections}.\\
-
-\begin{figure}[t!]
+\begin{figure}[b!]
 	\centering
 	\includegraphics[width=0.6\columnwidth]{images/introduction/tribler_connections}
 	\caption{The four disruptive technologies as integrated in Tribler.}
 	\label{fig:tribler-connections}
 \end{figure}
+
+\section{Tribler}
+Technical debt often becomes a noticeable issue in large systems that are built and maintained by many contributors. Tribler is an example of such a system: the software is the result of ten ongoing years of scientific research in the area of decentralized network technology and has incurred a serious amount of technical debt, both visible and invisible for users.
+The software is the combination of four disruptive technologies in one large code base: decentralized file downloading, onion routing, providing anonymous download and end-to-end encryption, the blockchain, offering a way to introduce the notion of trustworthiness inside a decentralized network and collaborative editing of content like Wikipedia. These technologies, together with an example application are depicted in Figure \ref{fig:tribler-connections}.\\
 
 \noindent Anonymity by the utilization of a Tor-like protocol has been added In 2014 by the work of Plak\cite{plak2014anonymous} and Tanaskoski\cite{tanaskoski2014anonymous}. 
 In 2015, the protocol has been extended to support anonymous seeding of torrents\cite{ruigrok2015bittorrent}.

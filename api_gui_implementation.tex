@@ -43,10 +43,6 @@ Most of the API endpoints are straightforward implementations: the client perfor
 
 \noindent The start procedure of the REST API proceeds in two steps during the initialization of Tribler: first, we enable the asynchronous \emph{events} connection after which the upgrade procedure in Tribler starts. Next, when Tribler has completely started, we enable the other endpoints. By starting the RESTful API in two steps, we are able to already push events that are happening during the upgrade procedure. This way, the user interface can already display the status of the upgrade procedure, even when Tribler itself has not fully started yet.
 
-\subsection{Error Handling}
-\label{subsec:error-handling-api}
-A proper designed API should have a mechanism to notify users about any internal errors that occurred during requests. Our API returns HTTP response code 500 (internal server error) when we observe a exception during execution of requests. Moreover, we return a JSON-encoded response that contains more specific information about the observed exception such as the name of the exception, whether the error has been handled by the core and if available, the stack trace of the exception. An example of an error response returned in case of an exception is displayed in Listing \ref{lst:error-api-json}.
-
 \begin{lstlisting}[caption={The response in JSON format returned when an exception is observed in Tribler during the processing of an API request.},label={lst:error-api-json}]
 {
   "error": {
@@ -61,6 +57,10 @@ A proper designed API should have a mechanism to notify users about any internal
   }
 }
 \end{lstlisting}
+
+\subsection{Error Handling}
+\label{subsec:error-handling-api}
+A proper designed API should have a mechanism to notify users about any internal errors that occurred during requests. Our API returns HTTP response code 500 (internal server error) when we observe a exception during execution of requests. Moreover, we return a JSON-encoded response that contains more specific information about the observed exception such as the name of the exception, whether the error has been handled by the core and if available, the stack trace of the exception. An example of an error response returned in case of an exception is displayed in Listing \ref{lst:error-api-json}.
 
 \section{The Graphical User Interface}
 The amount of accumulated technical debt in the current GUI of Tribler is devastating. After going through several development cycles where some impacting changes to the user interface have been made, the code base has reached the point where it might be more beneficial to design and implement a complete new user interface. 29,3\% of the Tribler code base, excluding Dispersy, is related to the user interface. We now will continue the discussion that has been initiated in Chapter \ref{chapter:problem-description} regarding the architecture of the user interface package. First, the structure of the current user interface will be described. We will make the consideration between refactoring efforts of the existing wxPython user interface or designing and implementing a new one. Additionally, encountered design decisions and implementation challenges are presented and discussed.
@@ -193,14 +193,14 @@ In the previous section, we described the old ranking algorithm, together with s
 s = \sum_{i=1}^{n} IDF(q_i) \frac{f(q_i, D)(k_1 + 1)}{f(q_i, D) + k_1 (1 - b + b * \frac{|D|}{avgdl})}
 \end{equation}
 
-In Equation \ref{eq:bm25}, we have a document $ D $ where the length of $ D $ (the number of words in the document) is denoted as $ |D| $. There are $ n $ keywords present in our search query, $ q_i $ representing the keyword at index $ i $. $ f(\cdot, D) $ gives the frequency of keyword $ q_i $ in document $ D $. $ avgdl $ is the average length of all documents in the database. $ k_1 $ and $ b $ are free parameters where usually $ k_1  \in [1.2,2.0] $ and $ b = 0.75 $. In our algorithm we choose $ k_1 = 1.2 $ and $ b = 0.75 $. The $ IDF(q_i) $ denotes the \emph{inversed document frequency} of keyword $ q_i $ which basically states how important a keyword is in a given document. The IDF is usually calculated as:
+\noindent In Equation \ref{eq:bm25}, we have a document $ D $ where the length of $ D $ (the number of words in the document) is denoted as $ |D| $. There are $ n $ keywords present in our search query, $ q_i $ representing the keyword at index $ i $. $ f(\cdot, D) $ gives the frequency of keyword $ q_i $ in document $ D $. $ avgdl $ is the average length of all documents in the database. $ k_1 $ and $ b $ are free parameters where usually $ k_1  \in [1.2,2.0] $ and $ b = 0.75 $. In our algorithm we choose $ k_1 = 1.2 $ and $ b = 0.75 $. The $ IDF(q_i) $ denotes the \emph{inverse document frequency} of keyword $ q_i $ which basically states how important a keyword is in a given document. The IDF is usually calculated as:
 
 \begin{equation}
 \label{eq:bm25-idf}
 IDF(q_i) = log\frac{N - n(q_i) + 0.5}{n(q_i) + 0.5}
 \end{equation}
 
-where $ N $ is the total number of documents and $ n(q_i) $ is the number of documents containing keyword $ q_i $. The full text search engine (FTS) in SQLite offers tools to calculate a BM25 score when performing a query. Unfortunately, this is not implemented in the engine we are currently using, FTS3. This motivates us to upgrade to a newer engine, FTS4, which offers the necessary tools to easily calculate the BM25 score. This requires a one-time upgrade of the database engine of users which should be performed when Tribler starts.\\\\
+\noindent In Equation \ref{eq:bm25-idf}, $ N $ is the total number of documents and $ n(q_i) $ is the number of documents containing keyword $ q_i $. The full text search engine (FTS) in SQLite offers tools to calculate a BM25 score when performing a query. Unfortunately, this is not implemented in the engine we are currently using, FTS3. This motivates us to upgrade to a newer engine, FTS4, which offers the necessary tools to easily calculate the BM25 score. This requires a one-time upgrade of the database engine of users which should be performed when Tribler starts.\\\\
 In our new algorithm, each search result is assigned a single relevance score. The final relevance score assigned to a torrent is dependent on three other sub-scores that are calculated using the BM25 algorithm and is a weighted average of the sub-scores, determined by the name of the torrent (80\%), the file names of the torrent (10\%) and the file extensions of the torrent (10\%). The final relevance score of a channel is the weighted average of the BM25 score of the name of the channel (80\%) and the description of the channel (20\%).\\\\
 While this works when searching for local search results, we should also be able to assign a relevance rank to incoming remote torrent or channel results. The difference between a local and remote keywords search, is that we do not have the contextual information retrieved from the database when a remote search results comes in, rendering us unable to calculate a BM25 score. To still be able to assign a BM25 score, we keep track of the latest local searches and the gathered information that is used by Equations \ref{eq:bm25} and \ref{eq:bm25-idf}. If we receive an incoming search result, we are using that stored information to quickly determine the relevance score of the remote result. Using this approach, we avoid a lookup in the database for every incoming remote search result. If we have no information about the latest local database lookup available, we assign a relevance score of 0 to the remote result.
 

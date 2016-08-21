@@ -94,7 +94,7 @@ After the anonymous download has started, Tribler attempts to build circuits whi
 \begin{figure}[!h]
 	\centering
 	\includegraphics[width=1.0\columnwidth]{images/big_experiment/circuits_ecdf}
-	\caption{An ECDF of the time until the circuits are ready.}
+	\caption{An ECDF of the time until the anonymous circuits are ready.}
 	\label{fig:big-experiment-circuits}
 \end{figure}
 
@@ -103,4 +103,4 @@ After the circuits are built, it takes on average 7.42 seconds before we receive
 
 \section{Integration in Jenkins}
 The experiment described in this section gave us insights in the failures and duration of various operations commonly performed by users in Tribler. In combination with the scenario file mechanism as described in Section \ref{sec:environment-specifications}, we can create a Jenkins job that performs the experiment as described in this section to give developers feedback about the consequences of their modifications on the operation of core operations. This job is more extensive than the unit tests and more resembles an application tests where the functioning of various parts of Tribler is verified. The job can be executed parallel during the testing phase displayed in Figure \ref{fig:jenkins-pipeline} to save time. We should change the structure of the experiment to have a better success rate, for instance, by searching for and downloading torrents with a good swarm health.\\\\
-Due to time constraints, we were not able to implement this feature, however, there are no major technical obstacles left before this Jenkins job can be realised. We think that the implementation of this job can be beneficial for the process of identifying defects and for the execution of performance measurements.
+This experiment is easy to reproduce and requires minimal work to be ready for usage as a key development tool that presents the total system performance at a glance. We think that the integration of this experiment into the development flow of Tribler is beneficial for the process of identifying defects and for performance measurements executed by developers.
